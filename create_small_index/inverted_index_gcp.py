@@ -56,8 +56,12 @@ class MultiFileWriter:
             The function saves the posting files into the right bucket in google storage.
         '''
         file_name = self._f.name
-        blob = self.bucket.blob(f"postings_small_titles_gcp/{file_name}")
+        blob = self.bucket.blob(f"postings_small_anchor_text_gcp/{file_name}")
         blob.upload_from_filename(file_name)
+
+    @staticmethod
+    def do_it():
+        print("i am fuckingggggg up to date man! sstfuuu")
 
 
 class MultiFileReader:
@@ -203,7 +207,7 @@ class InvertedIndex:
             pickle.dump(posting_locs, f)
         client = storage.Client()
         bucket = client.bucket(bucket_name)
-        blob_posting_locs = bucket.blob(f"postings_small_titles_gcp/{bucket_id}_posting_locs.pickle")
+        blob_posting_locs = bucket.blob(f"postings_small_anchor_text_gcp/{bucket_id}_posting_locs.pickle")
         blob_posting_locs.upload_from_filename(f"{bucket_id}_posting_locs.pickle")
 
 
