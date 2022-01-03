@@ -10,6 +10,7 @@ from operator import itemgetter
 from time import time
 from pathlib import Path
 import pickle
+import struct
 from google.cloud import storage
 from collections import defaultdict
 from contextlib import closing
