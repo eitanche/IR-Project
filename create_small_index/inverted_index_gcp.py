@@ -56,8 +56,12 @@ class MultiFileWriter:
             The function saves the posting files into the right bucket in google storage.
         '''
         file_name = self._f.name
-        blob = self.bucket.blob(f"postings_small_titles_gcp/{file_name}")
+        blob = self.bucket.blob(f"postings_small_anchor_text_gcp/{file_name}")
         blob.upload_from_filename(file_name)
+
+    @staticmethod
+    def do_it():
+        print("i am fuckingggggg up to date man! sstfuuu")
 
 
 class MultiFileReader:
@@ -90,7 +94,7 @@ class MultiFileReader:
 from collections import defaultdict
 from contextlib import closing
 
-TUPLE_SIZE = 12  # We're going to pack the doc_id and tf values in this
+TUPLE_SIZE = 16  # We're going to pack the doc_id and tf values in this
 # many bytes.
 TF_MASK = 2 ** 16 - 1  # Masking the 16 low bits of an integer
 
@@ -163,7 +167,7 @@ class InvertedIndex:
                 posting_list = []
                 for i in range(self.df[w]):
                     ###########################MODIFIED HERE #####################################
-                    doc_id, tf, max_tf, doc_len = struct.unpack("IhhI", b[i * TUPLE_SIZE:(i + 1) * TUPLE_SIZE])
+                    doc_id, tf, max_tf, doc_len = struct.unpack("IIII", b[i * TUPLE_SIZE:(i + 1) * TUPLE_SIZE])
                     posting_list.append((doc_id, tf, max_tf, doc_len))
                 yield w, posting_list
 
@@ -188,7 +192,7 @@ class InvertedIndex:
             for w, pl in list_w_pl:
                 # convert to bytes
                 ###########################HERE MODIFIED######################################
-                b = b''.join([struct.pack("IhhI", doc_id, tf, max_tf, doc_len) for doc_id, tf, max_tf, doc_len in pl])
+                b = b''.join([struct.pack("IIII", doc_id, tf, max_tf, doc_len) for doc_id, tf, max_tf, doc_len in pl])
                 # write to file(s)
                 locs = writer.write(b)
                 # save file locations to index
@@ -203,7 +207,7 @@ class InvertedIndex:
             pickle.dump(posting_locs, f)
         client = storage.Client()
         bucket = client.bucket(bucket_name)
-        blob_posting_locs = bucket.blob(f"postings_small_titles_gcp/{bucket_id}_posting_locs.pickle")
+        blob_posting_locs = bucket.blob(f"postings_small_anchor_text_gcp/{bucket_id}_posting_locs.pickle")
         blob_posting_locs.upload_from_filename(f"{bucket_id}_posting_locs.pickle")
 
 

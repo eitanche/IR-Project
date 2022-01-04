@@ -2,7 +2,7 @@ from inverted_index_gcp import InvertedIndex
 from nltk.stem.porter import *
 
 stemmer = PorterStemmer()
-index = InvertedIndex.read_index("small_body_index", "postings_gcp_index")
+index = InvertedIndex.read_index("small_indexes/small_body_index", "postings_gcp_index")
 stemmedIndex = InvertedIndex()
 stemmedIndex.AVGDL = index.AVGDL
 for word in index.df:

@@ -86,8 +86,8 @@ class InvertedIndex:
                     posting_list.append((doc_id, tf, max_tf, doc_len))
                 yield w, posting_list
 
-    def read_posting_list(self, w):
-        with closing(MultiFileReader()) as reader:
+    def read_posting_list(self, w, base_dir):
+        with closing(MultiFileReader(base_dir)) as reader:
             locs = self.posting_locs[w]
             b = reader.read(locs, self.df[w] * TUPLE_SIZE)
             posting_list = []
