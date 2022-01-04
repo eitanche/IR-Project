@@ -102,8 +102,7 @@ class InvertedIndex:
 
     @staticmethod
     def read_index(base_dir, name):
-
-        with open(Path(base_dir) / f'{name}.pkl', 'rb') as f:
+        with open(Path(base_dir) / f'postings_gcp_{name}.pkl', 'rb') as f:
             return pickle.load(f)
 
     @staticmethod
