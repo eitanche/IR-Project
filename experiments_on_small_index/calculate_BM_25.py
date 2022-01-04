@@ -9,10 +9,10 @@ import os
 
 
 stemmer = PorterStemmer()
-index = InvertedIndex.read_index(f"small_indexes{os.sep}postings_gcp","index")
+index = InvertedIndex.read_index(f"postings_small_title_gcp","index")
 AVGDL = index.AVGDL
-# query_terms = ['python', 'data', 'scienc', 'migrain', 'chocol', 'how', 'to', 'make', 'pasta', 'doe', 'pasta', 'have', 'preserv', 'how', 'googl', 'work', 'what', 'is', 'inform', 'retriev', 'nba', 'yoga', 'how', 'to', 'not', 'kill', 'plant', 'mask', 'black', 'friday', 'whi', 'do', 'men', 'have', 'nippl', 'rubber', 'duck', 'michelin', 'what', 'to', 'watch', 'best', 'marvel', 'movi', 'how', 'tall', 'is', 'the', 'eiffel', 'tower', 'where', 'doe', 'vanilla', 'flavor', 'come', 'from', 'best', 'ice', 'cream', 'flavour', 'how', 'to', 'tie', 'a', 'tie', 'how', 'to', 'earn', 'money', 'onlin', 'what', 'is', 'critic', 'race', 'theori', 'what', 'space', 'movi', 'wa', 'made', 'in', '1992', 'how', 'to', 'vote', 'googl', 'trend', 'dim', 'sum', 'ted', 'fairi', 'tale']
-query_terms = ['python', 'data', 'science', 'migraine', 'chocolate', 'how', 'to', 'make', 'pasta', 'Does', 'pasta', 'have', 'preservatives', 'how', 'google', 'works', 'what', 'is', 'information', 'retrieval', 'NBA', 'yoga', 'how', 'to', 'not', 'kill', 'plants', 'masks', 'black', 'friday', 'why', 'do', 'men', 'have', 'nipples', 'rubber', 'duck', 'michelin', 'what', 'to', 'watch', 'best', 'marvel', 'movie', 'how', 'tall', 'is', 'the', 'eiffel', 'tower', 'where', 'does', 'vanilla', 'flavoring', 'come', 'from', 'best', 'ice', 'cream', 'flavour', 'how', 'to', 'tie', 'a', 'tie', 'how', 'to', 'earn', 'money', 'online', 'what', 'is', 'critical', 'race', 'theory', 'what', 'space', 'movie', 'was', 'made', 'in', '1992', 'how', 'to', 'vote', 'google', 'trends', 'dim', 'sum', 'ted', 'fairy', 'tale']
+query_terms = ['python', 'data', 'scienc', 'migrain', 'chocol', 'how', 'to', 'make', 'pasta', 'doe', 'pasta', 'have', 'preserv', 'how', 'googl', 'work', 'what', 'is', 'inform', 'retriev', 'nba', 'yoga', 'how', 'to', 'not', 'kill', 'plant', 'mask', 'black', 'friday', 'whi', 'do', 'men', 'have', 'nippl', 'rubber', 'duck', 'michelin', 'what', 'to', 'watch', 'best', 'marvel', 'movi', 'how', 'tall', 'is', 'the', 'eiffel', 'tower', 'where', 'doe', 'vanilla', 'flavor', 'come', 'from', 'best', 'ice', 'cream', 'flavour', 'how', 'to', 'tie', 'a', 'tie', 'how', 'to', 'earn', 'money', 'onlin', 'what', 'is', 'critic', 'race', 'theori', 'what', 'space', 'movi', 'wa', 'made', 'in', '1992', 'how', 'to', 'vote', 'googl', 'trend', 'dim', 'sum', 'ted', 'fairi', 'tale']
+# query_terms = ['python', 'data', 'science', 'migraine', 'chocolate', 'how', 'to', 'make', 'pasta', 'Does', 'pasta', 'have', 'preservatives', 'how', 'google', 'works', 'what', 'is', 'information', 'retrieval', 'NBA', 'yoga', 'how', 'to', 'not', 'kill', 'plants', 'masks', 'black', 'friday', 'why', 'do', 'men', 'have', 'nipples', 'rubber', 'duck', 'michelin', 'what', 'to', 'watch', 'best', 'marvel', 'movie', 'how', 'tall', 'is', 'the', 'eiffel', 'tower', 'where', 'does', 'vanilla', 'flavoring', 'come', 'from', 'best', 'ice', 'cream', 'flavour', 'how', 'to', 'tie', 'a', 'tie', 'how', 'to', 'earn', 'money', 'online', 'what', 'is', 'critical', 'race', 'theory', 'what', 'space', 'movie', 'was', 'made', 'in', '1992', 'how', 'to', 'vote', 'google', 'trends', 'dim', 'sum', 'ted', 'fairy', 'tale']
 inverted_index_dict = defaultdict(list)
 k_b_presicion_values = defaultdict(list)
 queries_dict = {}
@@ -28,7 +28,7 @@ load inverted index into dictionary and count all the docs in the corpus int doc
 
 for term in query_terms:
     if term in index.df.keys():
-        inverted_index_dict[term] = index.read_posting_list(term,f"small_indexes{os.sep}postings_gcp")
+        inverted_index_dict[term] = index.read_posting_list(term,f"posting_small_text")
         docs.update([tup[0] for tup in inverted_index_dict[term]])
 
 
@@ -53,8 +53,8 @@ for term in query_terms:
 """
 lists of k's and b's for training
 """
-k_s = [0.7]
-b_s = [0.8]
+k_s = [i*0.05 for i in range(61)]
+b_s = [i*0.05 for i in range(21)]
 
 
 
@@ -67,7 +67,7 @@ def main():
             stopper = time.time()
             k_b_presicion_values[str(k)+","+str(b)] = calculate_presicion(k,b,all_queris_splitted_after_stemming) # returns list of presicions
             print(time.time()-stopper)
-    with open("all_k_b_scores_body.json",'w') as f:
+    with open("all_k_b_scores_titles_1200_sampels.json", 'w') as f:
         json.dump(k_b_presicion_values,f)
 
 

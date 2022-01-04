@@ -7,7 +7,7 @@ from reader_writer import MultiFileReader, MultiFileWriter
 import sys
 
 BLOCK_SIZE = 1999998
-TUPLE_SIZE = 12  # We're going to pack the doc_id and tf values in this
+TUPLE_SIZE = 16  # We're going to pack the doc_id and tf values in this
 # many bytes.
 TF_MASK = 2 ** 16 - 1  # Masking the 16 low bits of an integer
 
@@ -82,18 +82,19 @@ class InvertedIndex:
                     #   tf = int.from_bytes(b[i*TUPLE_SIZE+4:(i+1)*TUPLE_SIZE], 'big')
                     ###########################MODIFIED HERE #####################################
 
-                    doc_id, tf, max_tf, doc_len = struct.unpack("IhhI", b[i * TUPLE_SIZE:(i + 1) * TUPLE_SIZE])
+                    doc_id, tf, max_tf, doc_len = struct.unpack("IIII", b[i * TUPLE_SIZE:(i + 1) * TUPLE_SIZE])
                     posting_list.append((doc_id, tf, max_tf, doc_len))
                 yield w, posting_list
 
     def read_posting_list(self, w, base_dir):
+        # print(self.df[w])
         with closing(MultiFileReader(base_dir)) as reader:
             locs = self.posting_locs[w]
             b = reader.read(locs, self.df[w] * TUPLE_SIZE)
             posting_list = []
             for i in range(self.df[w]):
                 ##################### EDITED TO NEW POSTING LIST#######################
-                doc_id, tf, max_tf, doc_len = struct.unpack("IhhI", b[i * TUPLE_SIZE:(i + 1) * TUPLE_SIZE])
+                doc_id, tf, max_tf, doc_len = struct.unpack("IIII", b[i * TUPLE_SIZE:(i + 1) * TUPLE_SIZE])
                 posting_list.append((doc_id, tf, max_tf, doc_len))
                 # doc_id = int.from_bytes(b[i*TUPLE_SIZE:i*TUPLE_SIZE+4], 'big')
                 # tf = int.from_bytes(b[i*TUPLE_SIZE+4:(i+1)*TUPLE_SIZE], 'big')
@@ -102,7 +103,7 @@ class InvertedIndex:
 
     @staticmethod
     def read_index(base_dir, name):
-        with open(Path(base_dir) / f'postings_gcp_{name}.pkl', 'rb') as f:
+        with open(Path(base_dir) / f'{name}.pkl', 'rb') as f:
             return pickle.load(f)
 
     @staticmethod
