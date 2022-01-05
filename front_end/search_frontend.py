@@ -189,10 +189,13 @@ def get_pageview():
     '''
     res = []
     wiki_ids = request.get_json()
+    print(len(wiki_ids))
     if len(wiki_ids) == 0:
       return jsonify(res)
     # BEGIN SOLUTION
-
+    for id in wiki_ids:
+        if id in doc_id_to_page_views:
+            res.append(doc_id_to_page_views[id])
     # END SOLUTION
     return jsonify(res)
 
@@ -200,4 +203,3 @@ def get_pageview():
 if __name__ == '__main__':
     # run the Flask RESTful API, make the server publicly available (host='0.0.0.0') on port 8080
     app.run(host='0.0.0.0', port=8080, debug=True)
-    start_server()
