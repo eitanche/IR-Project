@@ -6,8 +6,8 @@ import json
 from math import log
 import os
 
-FILE_NAME = "all_k_b_scores_body_1200_sampels"
-INDEX_FOLDER = "postings_small_body_gcp"
+FILE_NAME = "all_k_b_anchor_text_1200_sampels"
+INDEX_FOLDER = "postings_small_anchor_text_gcp_2"
 
 
 stemmer = PorterStemmer()
@@ -55,8 +55,8 @@ for term in query_terms:
 """
 lists of k's and b's for training
 """
-k_s = [i*0.05 for i in range(10,51)]
-b_s = [i*0.05 for i in range(10,21)]
+k_s = [i*0.05 for i in range(0,61)]
+b_s = [i*0.05 for i in range(0,21)]
 
 # k_s=[0.5]
 # b_s=[0.5]

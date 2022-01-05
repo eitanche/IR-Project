@@ -1,4 +1,9 @@
+import json
+import pickle
 from flask import Flask, request, jsonify
+from count_query_appearances_in_docs import count_and_sort_query_terms
+from title_anchor_binary_inverted_index_gcp_without_stemming import InvertedIndex
+import os
 
 class MyFlaskApp(Flask):
     def run(self, host=None, port=None, debug=None, **options):
@@ -7,6 +12,18 @@ class MyFlaskApp(Flask):
 app = MyFlaskApp(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
+PAGE_RANK_FILE_NAME = 'page_rank.json'
+DOC_ID_TO_TITLE = f"{os.pardir}/final_indexes_and_files/dict_of_id_title.pkl"
+doc_id_to_title = None
+DOC_ID_TO_PAGE_VIEWS = f"{os.pardir}/final_indexes_and_files/page_views_of_each_doc.pkl"
+doc_id_to_page_views = None
+
+
+with open(DOC_ID_TO_TITLE, "rb") as f:
+    doc_id_to_title = pickle.load(f)
+
+with open(DOC_ID_TO_PAGE_VIEWS, "rb") as f:
+    doc_id_to_page_views = pickle.load(f)
 
 @app.route("/search")
 def search():
@@ -60,7 +77,7 @@ def search_body():
     # END SOLUTION
     return jsonify(res)
 
-@app.route("/search_title")
+@app.route("/search_title", methods=['POST'])
 def search_title():
     ''' Returns ALL (not just top 100) search results that contain A QUERY WORD 
         IN THE TITLE of articles, ordered in descending order of the NUMBER OF 
@@ -80,11 +97,48 @@ def search_title():
     res = []
     query = request.args.get('query', '')
     if len(query) == 0:
-      return jsonify(res)
+        return jsonify(res)
+    print("here")
     # BEGIN SOLUTION
+    doc_ids_and_scores = count_and_sort_query_terms(query, "title")
 
+    res = [[doc_id[0],doc_id_to_title[doc_id[0]]] for doc_id,score in doc_ids_and_scores]
+    # print(res[:10])
     # END SOLUTION
     return jsonify(res)
+
+
+@app.route("/search_anchor")
+def search_anchor():
+    ''' Returns ALL (not just top 100) search results that contain A QUERY WORD
+        IN THE ANCHOR TEXT of articles, ordered in descending order of the
+        NUMBER OF QUERY WORDS that appear in anchor text linking to the page.
+        For example, a document with a anchor text that matches two of the
+        query words will be ranked before a document with anchor text that
+        matches only one query term.
+
+        Test this by navigating to the a URL like:
+         http://YOUR_SERVER_DOMAIN/search_anchor?query=hello+world
+        where YOUR_SERVER_DOMAIN is something like XXXX-XX-XX-XX-XX.ngrok.io
+        if you're using ngrok on Colab or your external IP on GCP.
+    Returns:
+    --------
+        list of ALL (not just top 100) search results, ordered from best to
+        worst where each element is a tuple (wiki_id, title).
+    '''
+    res = []
+    query = request.args.get('query', '')
+    if len(query) == 0:
+        return jsonify(res)
+    # BEGIN SOLUTION
+    doc_ids_and_scores = count_and_sort_query_terms(query, "anchor")
+    res = [(doc_id,doc_id_to_title[doc_id]) for doc_id,score in doc_ids_and_scores]
+    # END SOLUTION
+    return jsonify(res)
+
+
+with open(PAGE_RANK_FILE_NAME,'r') as f:
+    page_ranks_dict = json.load(f)
 
 @app.route("/get_pagerank", methods=['POST'])
 def get_pagerank():
@@ -103,12 +157,16 @@ def get_pagerank():
           list of PageRank scores that correrspond to the provided article IDs.
     '''
     res = []
+    # print(page_ranks_dict.get()[10])
     wiki_ids = request.get_json()
     if len(wiki_ids) == 0:
       return jsonify(res)
     # BEGIN SOLUTION
-
+    for id in wiki_ids:
+        if str(id) in page_ranks_dict:
+            res.append(page_ranks_dict[str(id)])
     # END SOLUTION
+    print(res)
     return jsonify(res)
 
 @app.route("/get_pageview", methods=['POST'])
@@ -142,3 +200,4 @@ def get_pageview():
 if __name__ == '__main__':
     # run the Flask RESTful API, make the server publicly available (host='0.0.0.0') on port 8080
     app.run(host='0.0.0.0', port=8080, debug=True)
+    start_server()

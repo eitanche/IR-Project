@@ -88,7 +88,7 @@ class InvertedIndex:
 
     def read_posting_list(self, w, base_dir):
         # print(self.df[w])
-        print(self.df["vanilla"])
+        # print(self.df["vanilla"])
         with closing(MultiFileReader(base_dir)) as reader:
             locs = self.posting_locs[w]
             b = reader.read(locs, self.df[w] * TUPLE_SIZE)
@@ -100,6 +100,7 @@ class InvertedIndex:
                     posting_list.append((doc_id, tf, max_tf, doc_len))
                 except:
                     print(w)
+                    # print(self.posting_locs[w])
                 # doc_id = int.from_bytes(b[i*TUPLE_SIZE:i*TUPLE_SIZE+4], 'big')
                 # tf = int.from_bytes(b[i*TUPLE_SIZE+4:(i+1)*TUPLE_SIZE], 'big')
                 # posting_list.append((doc_id, tf))
