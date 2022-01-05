@@ -6,10 +6,12 @@ import json
 from math import log
 import os
 
+FILE_NAME = "all_k_b_scores_body_1200_sampels"
+INDEX_FOLDER = "postings_small_body_gcp"
 
 
 stemmer = PorterStemmer()
-index = InvertedIndex.read_index(f"postings_small_title_gcp","index")
+index = InvertedIndex.read_index(INDEX_FOLDER,"index")
 AVGDL = index.AVGDL
 query_terms = ['python', 'data', 'scienc', 'migrain', 'chocol', 'how', 'to', 'make', 'pasta', 'doe', 'pasta', 'have', 'preserv', 'how', 'googl', 'work', 'what', 'is', 'inform', 'retriev', 'nba', 'yoga', 'how', 'to', 'not', 'kill', 'plant', 'mask', 'black', 'friday', 'whi', 'do', 'men', 'have', 'nippl', 'rubber', 'duck', 'michelin', 'what', 'to', 'watch', 'best', 'marvel', 'movi', 'how', 'tall', 'is', 'the', 'eiffel', 'tower', 'where', 'doe', 'vanilla', 'flavor', 'come', 'from', 'best', 'ice', 'cream', 'flavour', 'how', 'to', 'tie', 'a', 'tie', 'how', 'to', 'earn', 'money', 'onlin', 'what', 'is', 'critic', 'race', 'theori', 'what', 'space', 'movi', 'wa', 'made', 'in', '1992', 'how', 'to', 'vote', 'googl', 'trend', 'dim', 'sum', 'ted', 'fairi', 'tale']
 # query_terms = ['python', 'data', 'science', 'migraine', 'chocolate', 'how', 'to', 'make', 'pasta', 'Does', 'pasta', 'have', 'preservatives', 'how', 'google', 'works', 'what', 'is', 'information', 'retrieval', 'NBA', 'yoga', 'how', 'to', 'not', 'kill', 'plants', 'masks', 'black', 'friday', 'why', 'do', 'men', 'have', 'nipples', 'rubber', 'duck', 'michelin', 'what', 'to', 'watch', 'best', 'marvel', 'movie', 'how', 'tall', 'is', 'the', 'eiffel', 'tower', 'where', 'does', 'vanilla', 'flavoring', 'come', 'from', 'best', 'ice', 'cream', 'flavour', 'how', 'to', 'tie', 'a', 'tie', 'how', 'to', 'earn', 'money', 'online', 'what', 'is', 'critical', 'race', 'theory', 'what', 'space', 'movie', 'was', 'made', 'in', '1992', 'how', 'to', 'vote', 'google', 'trends', 'dim', 'sum', 'ted', 'fairy', 'tale']
@@ -28,7 +30,7 @@ load inverted index into dictionary and count all the docs in the corpus int doc
 
 for term in query_terms:
     if term in index.df.keys():
-        inverted_index_dict[term] = index.read_posting_list(term,f"posting_small_text")
+        inverted_index_dict[term] = index.read_posting_list(term,INDEX_FOLDER)
         docs.update([tup[0] for tup in inverted_index_dict[term]])
 
 
@@ -53,9 +55,11 @@ for term in query_terms:
 """
 lists of k's and b's for training
 """
-k_s = [i*0.05 for i in range(61)]
-b_s = [i*0.05 for i in range(21)]
+# k_s = [i*0.05 for i in range(61)]
+# b_s = [i*0.05 for i in range(21)]
 
+k_s=[0.5]
+b_s=[0.5]
 
 
 def main():
@@ -67,7 +71,7 @@ def main():
             stopper = time.time()
             k_b_presicion_values[str(k)+","+str(b)] = calculate_presicion(k,b,all_queris_splitted_after_stemming) # returns list of presicions
             print(time.time()-stopper)
-    with open("all_k_b_scores_titles_1200_sampels.json", 'w') as f:
+    with open(f"{FILE_NAME}.json", 'w') as f:
         json.dump(k_b_presicion_values,f)
 
 

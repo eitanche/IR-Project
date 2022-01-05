@@ -69,11 +69,11 @@ class InvertedIndex:
         del state['_posting_list']
         return state
 
-    def posting_lists_iter(self):
+    def posting_lists_iter(self,base_dir):
         """ A generator that reads one posting list from disk and yields
             a (word:str, [(doc_id:int, tf:int), ...]) tuple.
         """
-        with closing(MultiFileReader()) as reader:
+        with closing(MultiFileReader(base_dir)) as reader:
             for w, locs in self.posting_locs.items():
                 b = reader.read(locs, self.df[w] * TUPLE_SIZE)
                 posting_list = []
@@ -136,7 +136,7 @@ class InvertedIndex:
                 # convert to bytes
 
                 ###########################HERE MODIFIED######################################
-                b = b''.join([struct.pack("IhhI", doc_id, tf, max_tf, doc_len) for doc_id, tf, max_tf, doc_len in pl])
+                b = b''.join([struct.pack("IIII", doc_id, tf, max_tf, doc_len) for doc_id, tf, max_tf, doc_len in pl])
 
                 # b = b''.join([(doc_id << 16 | (tf & TF_MASK)).to_bytes(TUPLE_SIZE, 'big')
                 #               for doc_id, tf in pl])
