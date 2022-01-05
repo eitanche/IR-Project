@@ -88,14 +88,18 @@ class InvertedIndex:
 
     def read_posting_list(self, w, base_dir):
         # print(self.df[w])
+        print(self.df["vanilla"])
         with closing(MultiFileReader(base_dir)) as reader:
             locs = self.posting_locs[w]
             b = reader.read(locs, self.df[w] * TUPLE_SIZE)
             posting_list = []
             for i in range(self.df[w]):
                 ##################### EDITED TO NEW POSTING LIST#######################
-                doc_id, tf, max_tf, doc_len = struct.unpack("IIII", b[i * TUPLE_SIZE:(i + 1) * TUPLE_SIZE])
-                posting_list.append((doc_id, tf, max_tf, doc_len))
+                try:
+                    doc_id, tf, max_tf, doc_len = struct.unpack("IIII", b[i * TUPLE_SIZE:(i + 1) * TUPLE_SIZE])
+                    posting_list.append((doc_id, tf, max_tf, doc_len))
+                except:
+                    print(w)
                 # doc_id = int.from_bytes(b[i*TUPLE_SIZE:i*TUPLE_SIZE+4], 'big')
                 # tf = int.from_bytes(b[i*TUPLE_SIZE+4:(i+1)*TUPLE_SIZE], 'big')
                 # posting_list.append((doc_id, tf))
