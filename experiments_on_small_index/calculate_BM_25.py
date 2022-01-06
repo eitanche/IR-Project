@@ -33,13 +33,13 @@ for term in query_terms:
         inverted_index_dict[term] = index.read_posting_list(term,INDEX_FOLDER)
         docs.update([tup[0] for tup in inverted_index_dict[term]])
 
-
+print(docs)
 
 
 
 N = len(docs) # number of all documents in the inverted index
 
-
+print(N)
 """
 calculates idf for each term in the index
 """

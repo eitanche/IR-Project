@@ -1,15 +1,46 @@
 import json
-from collections import Counter
+import time
+from collections import Counter,defaultdict
 from inverted_index_gcp import InvertedIndex
-from calculate_BM_25 import *
+from math import log
+from nltk.stem.porter import *
+# from calculate_BM_25 import *
 
 
-OPTIMAL_K = 1.5
-OPTIMAL_B = 0.75
+
+
+
+stemmer = PorterStemmer()
+
+
+####title####
+OPTIMAL_K_FOR_TITLE = 0.3
+OPTIMAL_B_FOR_TITLE = 1
+####body####
+OPTIMAL_K_FOR_BODY = 1.35
+OPTIMAL_B_FOR_BODY = 0.15
+####anchor####
+OPTIMAL_K_FOR_ANCHOR = 0.1
+OPTIMAL_B_FOR_ANCHOR = 0.25
 
 ####working on queries
 with open("queries_train.json") as f:
     queries_dict = json.load(f)
+
+def get_queries(queries_dictionary):
+    return list(queries_dictionary.keys())
+
+def stem_queries(queries_seperated):
+
+    all_queris_splitted_after_stemming = []
+    for query in queries_seperated:
+        splited_query = query.split(' ')
+        splited_stemmed_query = []
+        for term_from_query in splited_query:
+            splited_stemmed_query.append(stemmer.stem(term_from_query)) #list of query terms after stemming
+        all_queris_splitted_after_stemming.append(splited_stemmed_query) #list of lists of queries
+    return all_queris_splitted_after_stemming
+
 
 queries_seperated = get_queries(queries_dict) # return keys of the dict
 all_queris_splitted_after_stemming = stem_queries(queries_seperated)
@@ -17,21 +48,52 @@ all_queris_splitted_after_stemming = stem_queries(queries_seperated)
 
 ####
 queries_results_dict = defaultdict(list)
+
 ####
 
 #### load indexes
 title_index = InvertedIndex.read_index("postings_small_title_gcp","index")
-body_index  = InvertedIndex.read_index("posting_small_text","index")
-anchor_index = InvertedIndex.read_index("postings_small_anchor_text_gcp","index")
+body_index  = InvertedIndex.read_index("postings_small_body_gcp","index")
+anchor_index = InvertedIndex.read_index("postings_small_anchor_text_gcp_2","index")
 
 
+### n #####
+def calculate_number_of_unique_docs_in_index(index,folder):
+    unique_docs_set = []
+    for query in all_queris_splitted_after_stemming:
+        for word in query:
+            if word in index.df:
+                pls = index.read_posting_list(word,folder)
+                for doc_id,_,_,_ in pls:
+                    unique_docs_set.append(doc_id)
+    return len(set(unique_docs_set))
+
+
+
+
+title_base_dir = "postings_small_title_gcp"
+N_TITLE = calculate_number_of_unique_docs_in_index(title_index,"postings_small_title_gcp")
+title_index.N = N_TITLE
+title_index.BASE_DIR = title_base_dir
+
+N_BODY = calculate_number_of_unique_docs_in_index(body_index, "postings_small_body_gcp")
+body_index.N = N_BODY
+body_base_dir = "postings_small_body_gcp"
+body_index.BASE_DIR = body_base_dir
+
+N_ANCHOR = calculate_number_of_unique_docs_in_index(anchor_index, "postings_small_anchor_text_gcp_2")
+anchor_index.N = N_ANCHOR
+anchor_base_dir = "postings_small_anchor_text_gcp_2"
+anchor_index.BASE_DIR = anchor_base_dir
 
 
 #### weights
 
-w_titles = [0.03]
-w_bodies = [0.3]
-w_anchors =[0.5]
+w_titles = [i*0.01 for i in range (101)]
+w_bodies = [i*0.01 for i in range (101)]
+w_anchors =[i*0.01 for i in range (101)]
+
+
 
 
 
@@ -45,14 +107,18 @@ def main():
     for w_title in w_titles:
         for w_body in w_bodies:
             for w_anchor in w_anchors:
-                list_of_all_queries_precision = []
-                for i in range(30): #for each query
-                    sorted_docs_and_scores = get_top_40_docs_for_single_query(w_title, w_body, w_anchor, i) #40 sorted list of (doc_id,score)
-                    list_of_all_queries_precision.append(map_at_k(sorted_docs_and_scores,40,i)) #takes all the docs we have and makes list which contains 30 precisions
-                dict_of_precisions_for_all_queries["title wight:"+str(w_title)+","+"body wight:"+str(w_body)+","+"anchor wight:"+str(w_anchor)] = list_of_all_queries_precision
-
-    with open("only_indexes_merged_weights_precision_scores.json") as f:
+                if 0.99 < w_anchor+w_body+w_title < 1.01:
+                    list_of_all_queries_precision = []
+                    stopper = time.time()
+                    for i in range(30): #for each query
+                        sorted_docs_and_scores = get_top_40_docs_for_single_query(w_title, w_body, w_anchor, i) #40 sorted list of (doc_id,score)
+                        list_of_all_queries_precision.append(map_at_k(sorted_docs_and_scores,40,i)) #takes all the docs we have and makes list which contains 30 precisions
+                    dict_of_precisions_for_all_queries["title wight:"+str(w_title)+","+"body wight:"+str(w_body)+","+"anchor wight:"+str(w_anchor)] = list_of_all_queries_precision
+                    print(time.time() - stopper)
+    with open("only_indexes_merged_weights_precision_scores.json",'w') as f:
         json.dump(dict_of_precisions_for_all_queries,f)
+
+
 
 
 
@@ -91,9 +157,9 @@ def write_q_id_dict():
     returns dict of dicts for each index, each dict contains k docs which holds the best BM_25 scores for each query id
     """
     for i, query in enumerate(all_queris_splitted_after_stemming):
-        title_dict_index = create_index_dict(title_index, query, 300) ##remeber to save 300 docs here!!
-        body_dict_index = create_index_dict(body_index, query, 300)
-        anchor_dict_index = create_index_dict(anchor_index, query, 300)
+        title_dict_index = create_index_dict(title_index, query, 300,OPTIMAL_K_FOR_TITLE,OPTIMAL_B_FOR_TITLE) ##remeber to save 300 docs here!!
+        body_dict_index = create_index_dict(body_index, query, 300,OPTIMAL_K_FOR_BODY,OPTIMAL_B_FOR_BODY)
+        anchor_dict_index = create_index_dict(anchor_index, query, 300,OPTIMAL_K_FOR_ANCHOR,OPTIMAL_B_FOR_ANCHOR)
 
         list_of_doc_id_scores_merged = defaultdict(list)
         list_of_doc_id_scores_merged['title'] = title_dict_index
@@ -105,8 +171,8 @@ def write_q_id_dict():
     with open("top_k_results_from_all_indexes.json", 'w') as f:
         json.dump(queries_results_dict, f)
 
-def create_index_dict(index, query, k=300):
-       return calculate_BM_25_of_a_single_query(OPTIMAL_K,OPTIMAL_B,query , index)
+def create_index_dict(index, query, k ,optimal_k,optimal_b):
+       return calculate_BM_25_of_a_single_query(optimal_k,optimal_b,query , index)
 
 
 def calculate_BM_25_of_a_single_query(k, b, query, idx):
@@ -118,20 +184,33 @@ def calculate_BM_25_of_a_single_query(k, b, query, idx):
     for term, query_tf in counted_query.items():
         if not term in idx.df:
             continue
-        pls_of_term = idx.read_posting_list(term)
+        pls_of_term = idx.read_posting_list(term,idx.BASE_DIR)
         for doc_id, tf, max_tf, doc_len in pls_of_term:
-            docs_scores[doc_id] += BM_25_of_a_single_term_in_query(k,b,tf,doc_len, query_tf, term)
+            docs_scores[doc_id] += BM_25_of_a_single_term_in_query(idx,k,b,tf,doc_len, query_tf, term)
 
-    return list(docs_scores.items())[:300]
+    return dict(sorted(docs_scores.items(), key=lambda x: x[1], reverse=True)[:300])
 
-def BM_25_of_a_single_term_in_query(k, b, tf, doc_len, query_tf, term):
+def BM_25_of_a_single_term_in_query(index,k, b, tf, doc_len, query_tf, term):
     numerator = query_tf*(k+1)*tf
-    denumerator = tf+k*(1-b+((b*doc_len)/AVGDL))
-    return (numerator/denumerator)*idf[term]
+    denumerator = tf+k*(1-b+((b*doc_len)/index.AVGDL))
+    return (numerator/denumerator)*log((index.N+1)/index.df[term])
+
+
+def map_at_k(doc_id_oredered_bm_25_scores,k,i):
+    sum = 0
+    hit = 0
+    relevant_docs = list(queries_dict.values())[i] #the relevant documents from the i_th query list
+    for i in range(len(doc_id_oredered_bm_25_scores)):#we already cuted the list to size 40 in order_scores funciton
+        if doc_id_oredered_bm_25_scores[i][0] in relevant_docs:
+            hit += 1
+            sum += hit / (i + 1)
+    if hit == 0:
+        return 0
+    return sum/hit
+
 
 
 main()
-
 
 
 
