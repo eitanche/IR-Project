@@ -3,6 +3,7 @@ import pickle
 from flask import Flask, request, jsonify
 from count_query_appearances_in_docs import count_and_sort_query_terms
 from title_anchor_binary_inverted_index_gcp_without_stemming import InvertedIndex
+from body_tf_idf_search import get_top_100_tf_idf_scores
 import os
 
 class MyFlaskApp(Flask):
@@ -73,7 +74,8 @@ def search_body():
     if len(query) == 0:
       return jsonify(res)
     # BEGIN SOLUTION
-
+    top_doc_ids_and_scores = get_top_100_tf_idf_scores(query)
+    res = [[doc_id, doc_id_to_title[doc_id]] for doc_id, score in top_doc_ids_and_scores]
     # END SOLUTION
     return jsonify(res)
 
