@@ -12,6 +12,7 @@ TUPLE_SIZE = 16  # We're going to pack the doc_id and tf values in this
 TF_MASK = 2 ** 16 - 1  # Masking the 16 low bits of an integer
 
 
+
 class InvertedIndex:
     def __init__(self, docs={}):
         """ Initializes the inverted index and add documents to it (if provided).
@@ -19,6 +20,7 @@ class InvertedIndex:
         -----------
           docs: dict mapping doc_id to list of tokens
         """
+        self.bug_files = []
         # stores document frequency per term
         self.df = Counter()
         # AVERAGE corpus document length
@@ -99,7 +101,7 @@ class InvertedIndex:
                     doc_id, tf, max_tf, doc_len = struct.unpack("IIII", b[i * TUPLE_SIZE:(i + 1) * TUPLE_SIZE])
                     posting_list.append((doc_id, tf, max_tf, doc_len))
                 except:
-                    print(w)
+                    self.bug_files.append(w)
                     # print(self.posting_locs[w])
                 # doc_id = int.from_bytes(b[i*TUPLE_SIZE:i*TUPLE_SIZE+4], 'big')
                 # tf = int.from_bytes(b[i*TUPLE_SIZE+4:(i+1)*TUPLE_SIZE], 'big')

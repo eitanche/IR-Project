@@ -6,11 +6,12 @@ import json
 from math import log
 import os
 
-FILE_NAME = "all_k_b_scores_body_1200_sampels"
-INDEX_FOLDER = "postings_small_body_gcp"
-
+FILE_NAME = "all_k_b_title_1200_sampels"
+INDEX_FOLDER = "postings_small_title_gcp"
 
 stemmer = PorterStemmer()
+INDEX_FOLDER = "postings_small_title_gcp"
+
 index = InvertedIndex.read_index(INDEX_FOLDER,"index")
 AVGDL = index.AVGDL
 query_terms = ['python', 'data', 'scienc', 'migrain', 'chocol', 'how', 'to', 'make', 'pasta', 'doe', 'pasta', 'have', 'preserv', 'how', 'googl', 'work', 'what', 'is', 'inform', 'retriev', 'nba', 'yoga', 'how', 'to', 'not', 'kill', 'plant', 'mask', 'black', 'friday', 'whi', 'do', 'men', 'have', 'nippl', 'rubber', 'duck', 'michelin', 'what', 'to', 'watch', 'best', 'marvel', 'movi', 'how', 'tall', 'is', 'the', 'eiffel', 'tower', 'where', 'doe', 'vanilla', 'flavor', 'come', 'from', 'best', 'ice', 'cream', 'flavour', 'how', 'to', 'tie', 'a', 'tie', 'how', 'to', 'earn', 'money', 'onlin', 'what', 'is', 'critic', 'race', 'theori', 'what', 'space', 'movi', 'wa', 'made', 'in', '1992', 'how', 'to', 'vote', 'googl', 'trend', 'dim', 'sum', 'ted', 'fairi', 'tale']
@@ -27,11 +28,12 @@ idf = defaultdict(list)
 """
 load inverted index into dictionary and count all the docs in the corpus int docs set
 """
-
 for term in query_terms:
     if term in index.df.keys():
         inverted_index_dict[term] = index.read_posting_list(term,INDEX_FOLDER)
         docs.update([tup[0] for tup in inverted_index_dict[term]])
+
+
 
 
 
@@ -55,8 +57,8 @@ for term in query_terms:
 """
 lists of k's and b's for training
 """
-k_s = [i*0.05 for i in range(10,51)]
-b_s = [i*0.05 for i in range(0,11)]
+k_s = [i*0.05 for i in range(0,61)]
+b_s = [i*0.05 for i in range(0,21)]
 
 # k_s=[0.5]
 # b_s=[0.5]
@@ -73,11 +75,7 @@ def main():
             k_b_presicion_values[str(k)+","+str(b)] = calculate_presicion(k,b,all_queris_splitted_after_stemming) # returns list of presicions
             print(f"Finished {count} of 400")
             count+=1
-    with open(f"{FILE_NAME}.json", 'r') as f:
-        old_values = json.load(f)
-    for old_key,old_value in old_values.items():
-        k_b_presicion_values[old_key]=old_value
-    with open(f"{FILE_NAME}_added_values.json", 'w') as f:
+    with open(f"{FILE_NAME}.json", 'w') as f:
         json.dump(k_b_presicion_values,f)
 
 
