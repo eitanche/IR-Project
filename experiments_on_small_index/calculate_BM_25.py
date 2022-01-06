@@ -6,8 +6,8 @@ import json
 from math import log
 import os
 
-FILE_NAME = "all_k_b_anchor_text_1200_sampels"
-INDEX_FOLDER = "postings_small_anchor_text_gcp_2"
+FILE_NAME = "all_k_b_scores_body_1200_sampels"
+INDEX_FOLDER = "postings_small_body_gcp"
 
 
 stemmer = PorterStemmer()
@@ -55,8 +55,8 @@ for term in query_terms:
 """
 lists of k's and b's for training
 """
-k_s = [i*0.05 for i in range(0,61)]
-b_s = [i*0.05 for i in range(0,21)]
+k_s = [i*0.05 for i in range(10,51)]
+b_s = [i*0.05 for i in range(0,11)]
 
 # k_s=[0.5]
 # b_s=[0.5]
@@ -73,7 +73,11 @@ def main():
             k_b_presicion_values[str(k)+","+str(b)] = calculate_presicion(k,b,all_queris_splitted_after_stemming) # returns list of presicions
             print(f"Finished {count} of 400")
             count+=1
-    with open(f"{FILE_NAME}.json", 'w') as f:
+    with open(f"{FILE_NAME}.json", 'r') as f:
+        old_values = json.load(f)
+    for old_key,old_value in old_values.items():
+        k_b_presicion_values[old_key]=old_value
+    with open(f"{FILE_NAME}_added_values.json", 'w') as f:
         json.dump(k_b_presicion_values,f)
 
 
