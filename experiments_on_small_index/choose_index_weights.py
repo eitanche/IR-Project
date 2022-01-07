@@ -63,7 +63,7 @@ def choose_maximum_by_train():
 def print_file():
     with open(f"{EXPERIMENTS_FILE[:-5]}_averages.json", "r") as f:
         k_b_to_dict = json.load(f)
-        best_20_train = sorted([(dict['title_weight'],dict['body_weight'],dict['anchor_weight'],dict['train'],dict['test']) for dict in k_b_to_dict.values() if dict['anchor_weight']==0],key=lambda x: x[3],reverse=True)[:20]
+        best_20_train = sorted([(dict['title_weight'],dict['body_weight'],dict['anchor_weight'],dict['train'],dict['test']) for dict in k_b_to_dict.values()],key=lambda x: x[3],reverse=True)[:20]
         for scores in best_20_train:
             print(scores)
 

@@ -127,6 +127,8 @@ def calculate_BM_25_of_a_single_query(k, b, query):
 
     return docs_scores.items()
 
+
+
 def BM_25_of_a_single_term_in_query(k, b, tf, doc_len, query_tf, term):
     numerator = query_tf*(k+1)*tf
     denumerator = tf+k*(1-b+((b*doc_len)/AVGDL))
