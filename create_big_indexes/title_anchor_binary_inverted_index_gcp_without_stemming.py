@@ -39,7 +39,7 @@ class MultiFileWriter:
             remaining = BLOCK_SIZE - pos
             # if the current file is full, close and open a new one.
             if remaining == 0:
-                self._f.close()
+                # self._f.close()
                 self.upload_to_gcp(folder_name)
                 self._f = next(self._file_gen)
                 pos, remaining = 0, BLOCK_SIZE
@@ -56,8 +56,10 @@ class MultiFileWriter:
             The function saves the posting files into the right bucket in google storage.
         '''
         file_name = self._f.name
+        self._f.close()
         blob = self.bucket.blob(f"{folder_name}/{file_name}")
-        blob.upload_from_filename(file_name)
+        with open(self._base_dir / f'{file_name}','rb') as f:
+            blob.upload_from_file(f)
 
     @staticmethod
     def do_it():
