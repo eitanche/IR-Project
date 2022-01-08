@@ -104,7 +104,7 @@ def search_body():
     # END SOLUTION
     return jsonify(res)
 
-@app.route("/search_title", methods=['POST'])
+@app.route("/search_title")
 def search_title():
     ''' Returns ALL (not just top 100) search results that contain A QUERY WORD 
         IN THE TITLE of articles, ordered in descending order of the NUMBER OF 
@@ -128,7 +128,6 @@ def search_title():
     # print("here")
     # BEGIN SOLUTION
     doc_ids_and_scores = count_and_sort_query_terms(query, TITLE_INDEX_FOLDER)
-
     res = [[doc_id[0],doc_id_to_title.get(doc_id[0],'no_title_relevant_doc')] for doc_id,score in doc_ids_and_scores]
     # print(res[:10])
     # END SOLUTION
@@ -159,7 +158,8 @@ def search_anchor():
         return jsonify(res)
     # BEGIN SOLUTION
     doc_ids_and_scores = count_and_sort_query_terms(query, ANCHOR_INDEX_FOLDER)
-    res = [(doc_id,doc_id_to_title.get(doc_id,'no_title_relevant_doc')) for doc_id,score in doc_ids_and_scores]
+    res = [[doc_id[0],doc_id_to_title.get(doc_id[0],'no_title_relevant_doc')] for doc_id,score in doc_ids_and_scores]
+    # print(res)
     # END SOLUTION
     return jsonify(res)
 
