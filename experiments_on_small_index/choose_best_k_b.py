@@ -4,7 +4,7 @@ import json
 
 TRAIN_IDS = [1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 29]
 TEST_IDS =[0, 7, 11, 16, 26]
-EXPERIMENTS_FILE= "all_k_b_anchor_text_1200_sampels.json"
+EXPERIMENTS_FILE= "all_k_b_scores_body_1200_sampels.json"
 
 
 def choose_test_queries():
@@ -48,7 +48,7 @@ def choose_maximum_by_train():
     with open(f"{EXPERIMENTS_FILE[:-5]}_averages.json", "r") as f:
         k_b_to_dict = json.load(f)
 
-    best_k_b = sorted([(k_b, {"train":result_dict["train"], "test":result_dict["test"]}) for k_b, result_dict in k_b_to_dict.items()], key=lambda x:x[1]["test"], reverse=True)
+    best_k_b = sorted([(k_b, {"train":result_dict["train"], "test":result_dict["test"]}) for k_b, result_dict in k_b_to_dict.items()], key=lambda x:x[1]["train"], reverse=True)
     for item in best_k_b:
         if item[1]['train'] > 0.525:
             print(item)

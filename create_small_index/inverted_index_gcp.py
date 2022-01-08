@@ -11,7 +11,7 @@ from time import time
 from pathlib import Path
 import pickle
 import struct
-from google.cloud import storage
+#from google.cloud import storage
 from collections import defaultdict
 from contextlib import closing
 
@@ -39,7 +39,6 @@ class MultiFileWriter:
             remaining = BLOCK_SIZE - pos
             # if the current file is full, close and open a new one.
             if remaining == 0:
-                self._f.close()
                 self.upload_to_gcp()
                 self._f = next(self._file_gen)
                 pos, remaining = 0, BLOCK_SIZE
@@ -56,8 +55,10 @@ class MultiFileWriter:
             The function saves the posting files into the right bucket in google storage.
         '''
         file_name = self._f.name
-        blob = self.bucket.blob(f"postings_small_anchor_text_gcp/{file_name}")
-        blob.upload_from_filename(file_name)
+        self._f.close()
+        blob = self.bucket.blob(f"body_two_word_index/{file_name}")
+        with open(self._base_dir / f'{file_name}', 'rb') as f:
+            blob.upload_from_file(f)
 
     @staticmethod
     def do_it():
@@ -154,7 +155,7 @@ class InvertedIndex:
             from the object's state dictionary.
         """
         state = self.__dict__.copy()
-        del state['_posting_list']
+        #del state['_posting_list']
         return state
 
     def posting_lists_iter(self):
@@ -206,7 +207,7 @@ class InvertedIndex:
             pickle.dump(posting_locs, f)
         client = storage.Client()
         bucket = client.bucket(bucket_name)
-        blob_posting_locs = bucket.blob(f"postings_small_anchor_text_gcp/{bucket_id}_posting_locs.pickle")
+        blob_posting_locs = bucket.blob(f"body_two_word_index/{bucket_id}_posting_locs.pickle")
         blob_posting_locs.upload_from_filename(f"{bucket_id}_posting_locs.pickle")
 
 

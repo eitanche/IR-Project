@@ -3,14 +3,13 @@ from collections import defaultdict, Counter
 from inverted_index_gcp import InvertedIndex
 from nltk.stem.porter import *
 import json
-from math import log
+from math import log10
 import os
 
-FILE_NAME = "all_k_b_title_1200_sampels"
-INDEX_FOLDER = "postings_small_title_gcp"
+FILE_NAME = "all_k_b_title_1200_sampels_two_word_index_body"
+INDEX_FOLDER = "/Users/eitan/University/Information Retrieval/IR-Project/experiments_on_small_index/body_two_word_index"
 
 stemmer = PorterStemmer()
-INDEX_FOLDER = "postings_small_title_gcp"
 
 index = InvertedIndex.read_index(INDEX_FOLDER,"index")
 AVGDL = index.AVGDL
@@ -28,24 +27,21 @@ idf = defaultdict(list)
 """
 load inverted index into dictionary and count all the docs in the corpus int docs set
 """
-for term in query_terms:
-    if term in index.df.keys():
-        inverted_index_dict[term] = index.read_posting_list(term,INDEX_FOLDER)
-        docs.update([tup[0] for tup in inverted_index_dict[term]])
+for term in index.df.keys():
+    inverted_index_dict[term] = index.read_posting_list(term,INDEX_FOLDER)
+    docs.update([tup[0] for tup in inverted_index_dict[term]])
 
-print(docs)
+#print(docs)
 
 
 
 N = len(docs) # number of all documents in the inverted index
 
-print(N)
 """
 calculates idf for each term in the index
 """
-for term in query_terms:
-    if term in index.df.keys():
-        idf[term] = log((N+1)/index.df[term])
+for term in index.df.keys():
+    idf[term] = log10((N+1)/index.df[term])
 
 # print(N)
 # print(idf)
@@ -57,28 +53,28 @@ for term in query_terms:
 """
 lists of k's and b's for training
 """
-# k_s = [i*0.05 for i in range(0,61)]
+# k_s = [i*0.05 for i in range(20,61)]
 # b_s = [i*0.05 for i in range(0,21)]
 
-k_s=[0.5]
-b_s=[0.5]
+k_s=[1.35]
+b_s=[0.15]
 
 
 def main():
 
+    total_exp = 61*21
     queries_seperated = get_queries(queries_dict) # return keys of the dict
     all_queris_splitted_after_stemming = stem_queries(queries_seperated)
 
     count = 1
-    stopper = time.time()
     for k in k_s:
         for b in b_s:
+            stopper = time.time()
             k_b_presicion_values[str(k)+","+str(b)] = calculate_presicion(k,b,all_queris_splitted_after_stemming) # returns list of presicions
-            print(f"Finished {count} of 400")
+            print(f"Finished {count} of {total_exp}")
             count+=1
-    print(time.time() - stopper)
-    # with open(f"{FILE_NAME}.json", 'w') as f:
-    #     json.dump(k_b_presicion_values,f)
+    with open(f"{FILE_NAME}.json", 'w') as f:
+        json.dump(k_b_presicion_values,f)
 
 
 def get_queries(queries_dictionary):
@@ -126,6 +122,15 @@ def calculate_BM_25_of_a_single_query(k, b, query):
         pls_of_term = inverted_index_dict[term]
         for doc_id, tf, max_tf, doc_len in pls_of_term:
             docs_scores[doc_id] += BM_25_of_a_single_term_in_query(k,b,tf,doc_len, query_tf, term)
+    two_word_query = [query[i]+" "+query[i+1] for i in range(len(query)-1)]
+    counted_query = Counter(two_word_query)
+    for term, query_tf in counted_query.items():
+        if term not in inverted_index_dict:
+            continue
+        pls_of_term = inverted_index_dict[term]
+        for doc_id, tf, max_tf, doc_len in pls_of_term:
+            docs_scores[doc_id] += BM_25_of_a_single_term_in_query(k, b, tf*0.5, doc_len, query_tf, term)
+
 
     return docs_scores.items()
 
