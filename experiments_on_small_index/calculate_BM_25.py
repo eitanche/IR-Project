@@ -6,8 +6,8 @@ import json
 from math import log10
 import os
 
-FILE_NAME = "all_k_b_title_1200_sampels_two_word_index_body"
-INDEX_FOLDER = "/Users/eitan/University/Information Retrieval/IR-Project/experiments_on_small_index/body_two_word_index"
+FILE_NAME = "all_k_b_1200_sampels_two_word_index_body_ehud"
+INDEX_FOLDER = "C:/Users/Owner/PycharmProjects/IR-Project/experiments_on_small_indexbody_two_word_index"
 
 stemmer = PorterStemmer()
 
@@ -53,11 +53,11 @@ for term in index.df.keys():
 """
 lists of k's and b's for training
 """
-# k_s = [i*0.05 for i in range(20,43)] eitan   ## k_s = [i*0.05 for i in range(43,61)] ehud
-# b_s = [i*0.05 for i in range(0,21)]
+k_s = [i*0.05 for i in range(43,61)]
+b_s = [i*0.05 for i in range(0,21)]
 
-k_s=[1.35]
-b_s=[0.15]
+# k_s=[1.35]
+# b_s=[0.15]
 
 
 def main():
@@ -69,7 +69,6 @@ def main():
     count = 1
     for k in k_s:
         for b in b_s:
-            stopper = time.time()
             k_b_presicion_values[str(k)+","+str(b)] = calculate_presicion(k,b,all_queris_splitted_after_stemming) # returns list of presicions
             print(f"Finished {count} of {total_exp}")
             count+=1
