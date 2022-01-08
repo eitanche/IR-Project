@@ -229,4 +229,17 @@ class InvertedIndex:
         blob_posting_locs = bucket.blob(f"{folder_name}/{bucket_id}_posting_locs.pickle")
         blob_posting_locs.upload_from_filename(f"{bucket_id}_posting_locs.pickle")
 
-
+  # tokens = [token.group() for token in RE_WORD.finditer(text.lower())]
+  # #ADDED stopwords removal
+  #
+  # one_word_tokens = [stemmer.stem(token) for token in tokens if token not in all_stopwords]
+  # two_word_tokens = [one_word_tokens[i]+" "+one_word_tokens[i+1] for i in range(len(one_word_tokens)-1) if one_word_tokens[i] in query_terms and one_word_tokens[i+1] in query_terms]
+  # # YOUR CODE HERE
+  # count = Counter(two_word_tokens)
+  # if len(count)==0:
+  #     return []
+  # #### ADDED doc_len and max_tf to posting lists
+  # doc_len = len(one_word_tokens)
+  # max_tf = 0#count.most_common(1)[0][1]
+  # #return [(word,(id,tf,max_tf, doc_len)) for word,tf in count.items() if word not in all_stopwords]
+  # return [(word,(id,tf*2,max_tf, doc_len)) for word,tf in count.items()]
