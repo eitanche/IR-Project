@@ -6,8 +6,8 @@ import json
 from math import log10
 import os
 
-FILE_NAME = "all_k_b_1200_sampels_two_word_index_body_ehud"
-INDEX_FOLDER = "C:/Users/Owner/PycharmProjects/IR-Project/experiments_on_small_indexbody_two_word_index"
+FILE_NAME = "all_k_b_1200_sampels_two_word_index_anchor"
+INDEX_FOLDER = "/Users/eitan/University/Information Retrieval/IR-Project/experiments_on_small_index/anchor_two_word_index"
 
 stemmer = PorterStemmer()
 
@@ -53,11 +53,9 @@ for term in index.df.keys():
 """
 lists of k's and b's for training
 """
-k_s = [i*0.05 for i in range(43,61)]
+k_s = [i*0.05 for i in range(0,61)]
 b_s = [i*0.05 for i in range(0,21)]
 
-# k_s=[1.35]
-# b_s=[0.15]
 
 
 def main():
@@ -126,6 +124,7 @@ def calculate_BM_25_of_a_single_query(k, b, query):
     for term, query_tf in counted_query.items():
         if term not in inverted_index_dict:
             continue
+        print("here")
         pls_of_term = inverted_index_dict[term]
         for doc_id, tf, max_tf, doc_len in pls_of_term:
             docs_scores[doc_id] += BM_25_of_a_single_term_in_query(k, b, tf*0.5, doc_len, query_tf, term)

@@ -14,7 +14,7 @@ with open(f"{os.pardir}/final_indexes_and_files/normalized_page_views_of_each_do
 with open("normalized_small_page_rank.json",'r') as f:
     page_rank_doc_id_rank_dict = json.load(f)
 
-with open("model_best_results_for_each_query.json", "r") as x:
+with open("model_best_results_for_each_query_two_word.json", "r") as x:
     query_to_merged_results_dict = json.load(x)
 
 with open("queries_train.json") as f:
@@ -55,5 +55,5 @@ for index_weight in w_index:
                     list_of_all_queries_precision.append(map_at_k(sorted_docs_and_scores,40,i)) #takes all the docs we have and makes list which contains 30 precisions
                 dict_of_precisions_for_all_queries["index_weight:"+str(index_weight)+","+"page_rank_weight:"+str(page_rank_weight)+","+"page_views_weight:"+str(page_views_weight)] = list_of_all_queries_precision
                 print(time.time() - stopper)
-with open("final_merge_precision_score.json",'w') as f:
+with open("final_merge_precision_score_two_word.json",'w') as f:
     json.dump(dict_of_precisions_for_all_queries,f)

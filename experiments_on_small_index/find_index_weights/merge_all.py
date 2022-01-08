@@ -2,7 +2,7 @@ import json
 import time
 from collections import Counter,defaultdict
 from inverted_index_gcp import InvertedIndex
-from math import log
+from math import log10
 from nltk.stem.porter import *
 # from calculate_BM_25 import *
 
@@ -17,11 +17,11 @@ stemmer = PorterStemmer()
 OPTIMAL_K_FOR_TITLE = 0.3
 OPTIMAL_B_FOR_TITLE = 1
 ####body####
-OPTIMAL_K_FOR_BODY = 1.35
-OPTIMAL_B_FOR_BODY = 0.15
+OPTIMAL_K_FOR_BODY = 2.7
+OPTIMAL_B_FOR_BODY = 0.05
 ####anchor####
 OPTIMAL_K_FOR_ANCHOR = 0.1
-OPTIMAL_B_FOR_ANCHOR = 0.25
+OPTIMAL_B_FOR_ANCHOR = 0.2
 
 ####working on queries
 with open("queries_train.json") as f:
@@ -52,38 +52,36 @@ queries_results_dict = defaultdict(list)
 ####
 
 #### load indexes
-title_index = InvertedIndex.read_index("postings_small_title_gcp","index")
-body_index  = InvertedIndex.read_index("postings_small_body_gcp","index")
-anchor_index = InvertedIndex.read_index("postings_small_anchor_text_gcp_2","index")
+title_index = InvertedIndex.read_index("title_two_word_index","index")
+body_index  = InvertedIndex.read_index("body_two_word_index","index")
+anchor_index = InvertedIndex.read_index("anchor_two_word_index","index")
 
 
 ### n #####
 def calculate_number_of_unique_docs_in_index(index,folder):
     unique_docs_set = []
-    for query in all_queris_splitted_after_stemming:
-        for word in query:
-            if word in index.df:
-                pls = index.read_posting_list(word,folder)
-                for doc_id,_,_,_ in pls:
-                    unique_docs_set.append(doc_id)
+    for word in index.df:
+        pls = index.read_posting_list(word,folder)
+        for doc_id,_,_,_ in pls:
+            unique_docs_set.append(doc_id)
     return len(set(unique_docs_set))
 
 
 
 
-title_base_dir = "postings_small_title_gcp"
-N_TITLE = calculate_number_of_unique_docs_in_index(title_index,"postings_small_title_gcp")
+title_base_dir = "title_two_word_index"
+N_TITLE = calculate_number_of_unique_docs_in_index(title_index,"title_two_word_index")
 title_index.N = N_TITLE
 title_index.BASE_DIR = title_base_dir
 
-N_BODY = calculate_number_of_unique_docs_in_index(body_index, "postings_small_body_gcp")
+N_BODY = calculate_number_of_unique_docs_in_index(body_index, "body_two_word_index")
 body_index.N = N_BODY
-body_base_dir = "postings_small_body_gcp"
+body_base_dir = "body_two_word_index"
 body_index.BASE_DIR = body_base_dir
 
-N_ANCHOR = calculate_number_of_unique_docs_in_index(anchor_index, "postings_small_anchor_text_gcp_2")
+N_ANCHOR = calculate_number_of_unique_docs_in_index(anchor_index, "anchor_two_word_index")
 anchor_index.N = N_ANCHOR
-anchor_base_dir = "postings_small_anchor_text_gcp_2"
+anchor_base_dir = "anchor_two_word_index"
 anchor_index.BASE_DIR = anchor_base_dir
 
 
@@ -115,7 +113,7 @@ def main():
                         list_of_all_queries_precision.append(map_at_k(sorted_docs_and_scores,40,i)) #takes all the docs we have and makes list which contains 30 precisions
                     dict_of_precisions_for_all_queries["title wight:"+str(w_title)+","+"body wight:"+str(w_body)+","+"anchor wight:"+str(w_anchor)] = list_of_all_queries_precision
                     print(time.time() - stopper)
-    with open("only_indexes_merged_weights_precision_scores.json",'w') as f:
+    with open("only_indexes_merged_weights_precision_scores_two_word_index.json", 'w') as f:
         json.dump(dict_of_precisions_for_all_queries,f)
 
 
@@ -168,7 +166,7 @@ def write_q_id_dict():
 
         queries_results_dict[i] = list_of_doc_id_scores_merged
 
-    with open("top_k_results_from_all_indexes.json", 'w') as f:
+    with open("top_k_results_from_all_indexes_two_word_index.json", 'w') as f:
         json.dump(queries_results_dict, f)
 
 def create_index_dict(index, query, k ,optimal_k,optimal_b):
@@ -187,13 +185,21 @@ def calculate_BM_25_of_a_single_query(k, b, query, idx):
         pls_of_term = idx.read_posting_list(term,idx.BASE_DIR)
         for doc_id, tf, max_tf, doc_len in pls_of_term:
             docs_scores[doc_id] += BM_25_of_a_single_term_in_query(idx,k,b,tf,doc_len, query_tf, term)
+    two_word_query = [query[i] + " " + query[i + 1] for i in range(len(query) - 1)]
+    counted_query = Counter(two_word_query)
+    for term, query_tf in counted_query.items():
+        if term not in idx.df:
+            continue
+        pls_of_term =  idx.read_posting_list(term,idx.BASE_DIR)
+        for doc_id, tf, max_tf, doc_len in pls_of_term:
+            docs_scores[doc_id] += BM_25_of_a_single_term_in_query(idx, k, b, tf * 0.5, doc_len, query_tf, term)
 
     return dict(sorted(docs_scores.items(), key=lambda x: x[1], reverse=True)[:300])
 
 def BM_25_of_a_single_term_in_query(index,k, b, tf, doc_len, query_tf, term):
     numerator = query_tf*(k+1)*tf
     denumerator = tf+k*(1-b+((b*doc_len)/index.AVGDL))
-    return (numerator/denumerator)*log((index.N+1)/index.df[term])
+    return (numerator/denumerator)*log10((index.N+1)/index.df[term])
 
 
 def map_at_k(doc_id_oredered_bm_25_scores,k,i):
