@@ -53,7 +53,7 @@ for term in index.df.keys():
 """
 lists of k's and b's for training
 """
-# k_s = [i*0.05 for i in range(20,61)]
+# k_s = [i*0.05 for i in range(20,43)] eitan   ## k_s = [i*0.05 for i in range(43,61)] ehud
 # b_s = [i*0.05 for i in range(0,21)]
 
 k_s=[1.35]
