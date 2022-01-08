@@ -5,6 +5,7 @@ from count_query_appearances_in_docs import count_and_sort_query_terms
 from title_anchor_binary_inverted_index_gcp_without_stemming import InvertedIndex
 from body_tf_idf_search import get_top_100_tf_idf_scores
 import os
+from best_search_function_for_frontend import get_top_100_best_search
 
 class MyFlaskApp(Flask):
     def run(self, host=None, port=None, debug=None, **options):
@@ -13,18 +14,38 @@ class MyFlaskApp(Flask):
 app = MyFlaskApp(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
-PAGE_RANK_FILE_NAME = 'page_rank.json'
+####global names####
+PAGE_RANK_FILE_NAME = '../final_indexes_and_files/page_rank.json'
 DOC_ID_TO_TITLE = f"{os.pardir}/final_indexes_and_files/dict_of_id_title.pkl"
-doc_id_to_title = None
 DOC_ID_TO_PAGE_VIEWS = f"{os.pardir}/final_indexes_and_files/page_views_of_each_doc.pkl"
-doc_id_to_page_views = None
+PAGE_VIEWS_PAGE_RANK_DICT = f"{os.pardir}/final_indexes_and_files/combined_page_rank_page_view_score_weighted_019_003.pkl"
+TITLE_INDEX_FOLDER = f"{os.pardir}/final_indexes_and_files/title_binary_index"
+ANCHOR_INDEX_FOLDER = f"{os.pardir}/final_indexes_and_files/anchor_binary_index"
+BEST_FINAL_MERGED_INDEX = None
+####global names####
 
+
+####global dicts####
+doc_id_to_title = None
+doc_id_to_page_views = None
+best_final_merged_index = None
+page_vies_page_rank_dict = None
 
 with open(DOC_ID_TO_TITLE, "rb") as f:
     doc_id_to_title = pickle.load(f)
 
+with open(PAGE_VIEWS_PAGE_RANK_DICT, "rb") as f:
+    page_vies_page_rank_dict = pickle.load(f)
+
+#if there is a ram problems, this ones need to sit in their own function
 with open(DOC_ID_TO_PAGE_VIEWS, "rb") as f:
     doc_id_to_page_views = pickle.load(f)
+
+with open(PAGE_RANK_FILE_NAME,'r') as f:
+    page_ranks_dict = json.load(f)
+#if there is a ram problems, this ones need to sit in their own function
+
+####global dicts####
 
 @app.route("/search")
 def search():
@@ -48,8 +69,12 @@ def search():
     query = request.args.get('query', '')
     if len(query) == 0:
       return jsonify(res)
+    #####
+    #word2vec?
+    #####
     # BEGIN SOLUTION
-
+    best_top_doc_ids_and_scores = get_top_100_best_search(query,best_final_merged_index,page_vies_page_rank_dict)
+    res = [[doc_id, doc_id_to_title.get(doc_id,'no_title_relevant_doc')] for doc_id, score in best_top_doc_ids_and_scores]
     # END SOLUTION
     return jsonify(res)
 
@@ -75,7 +100,7 @@ def search_body():
       return jsonify(res)
     # BEGIN SOLUTION
     top_doc_ids_and_scores = get_top_100_tf_idf_scores(query)
-    res = [[doc_id, doc_id_to_title[doc_id]] for doc_id, score in top_doc_ids_and_scores]
+    res = [[doc_id, doc_id_to_title.get(doc_id,'no_title_relevant_doc')] for doc_id, score in top_doc_ids_and_scores]
     # END SOLUTION
     return jsonify(res)
 
@@ -100,11 +125,11 @@ def search_title():
     query = request.args.get('query', '')
     if len(query) == 0:
         return jsonify(res)
-    print("here")
+    # print("here")
     # BEGIN SOLUTION
-    doc_ids_and_scores = count_and_sort_query_terms(query, "title")
+    doc_ids_and_scores = count_and_sort_query_terms(query, TITLE_INDEX_FOLDER)
 
-    res = [[doc_id[0],doc_id_to_title[doc_id[0]]] for doc_id,score in doc_ids_and_scores]
+    res = [[doc_id[0],doc_id_to_title.get(doc_id[0],'no_title_relevant_doc')] for doc_id,score in doc_ids_and_scores]
     # print(res[:10])
     # END SOLUTION
     return jsonify(res)
@@ -133,14 +158,13 @@ def search_anchor():
     if len(query) == 0:
         return jsonify(res)
     # BEGIN SOLUTION
-    doc_ids_and_scores = count_and_sort_query_terms(query, "anchor")
-    res = [(doc_id,doc_id_to_title[doc_id]) for doc_id,score in doc_ids_and_scores]
+    doc_ids_and_scores = count_and_sort_query_terms(query, ANCHOR_INDEX_FOLDER)
+    res = [(doc_id,doc_id_to_title.get(doc_id,'no_title_relevant_doc')) for doc_id,score in doc_ids_and_scores]
     # END SOLUTION
     return jsonify(res)
 
 
-with open(PAGE_RANK_FILE_NAME,'r') as f:
-    page_ranks_dict = json.load(f)
+
 
 @app.route("/get_pagerank", methods=['POST'])
 def get_pagerank():

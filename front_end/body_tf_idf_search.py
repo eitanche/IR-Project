@@ -2,6 +2,7 @@ import re
 import pickle
 from collections import Counter
 from body_tf_idf_inverted_index_gcp_without_stemming import InvertedIndex
+import os
 
 BODY_TF_IDF_INDEX_FOLDER = f"{os.pardir}/final_indexes_and_files/body_tf_idf_index"
 RE_WORD = re.compile(r"""[\#\@\w](['\-]?\w){2,24}""", re.UNICODE)

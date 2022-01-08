@@ -57,11 +57,11 @@ for term in query_terms:
 """
 lists of k's and b's for training
 """
-k_s = [i*0.05 for i in range(0,61)]
-b_s = [i*0.05 for i in range(0,21)]
+# k_s = [i*0.05 for i in range(0,61)]
+# b_s = [i*0.05 for i in range(0,21)]
 
-# k_s=[0.5]
-# b_s=[0.5]
+k_s=[0.5]
+b_s=[0.5]
 
 
 def main():
@@ -70,13 +70,15 @@ def main():
     all_queris_splitted_after_stemming = stem_queries(queries_seperated)
 
     count = 1
+    stopper = time.time()
     for k in k_s:
         for b in b_s:
             k_b_presicion_values[str(k)+","+str(b)] = calculate_presicion(k,b,all_queris_splitted_after_stemming) # returns list of presicions
             print(f"Finished {count} of 400")
             count+=1
-    with open(f"{FILE_NAME}.json", 'w') as f:
-        json.dump(k_b_presicion_values,f)
+    print(time.time() - stopper)
+    # with open(f"{FILE_NAME}.json", 'w') as f:
+    #     json.dump(k_b_presicion_values,f)
 
 
 def get_queries(queries_dictionary):
