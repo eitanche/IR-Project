@@ -5,7 +5,7 @@ from merged_all_inexes_with_bm_25_score import InvertedIndex
 
 RE_WORD = re.compile(r"""[\#\@\w](['\-]?\w){2,24}""", re.UNICODE)
 MERGED_BM25_INDEX_FOLDER = "merged_corpus_index_two_word"
-INDEX_WEIGHT =
+INDEX_WEIGHT = 0.98
 BUCKET_NAME = "idx316179928316366087idx"
 
 def get_top_100_best_search(query, index, page_views_page_rank_dict, stemmer):
