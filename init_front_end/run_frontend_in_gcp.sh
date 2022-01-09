@@ -50,7 +50,7 @@ python3 search_frontend.py
 gcloud compute instances delete -q $INSTANCE_NAME
 # make sure there are no lingering instances
 gcloud compute instances list
-# delete firewall rule
+# bin_files_fixe firewall rule
 gcloud compute firewall-rules delete -q default-allow-http-8080
-# delete external addresses
+# bin_files_fixe external addresses
 gcloud compute addresses delete -q $IP_NAME --region $REGION

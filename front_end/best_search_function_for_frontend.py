@@ -1,11 +1,12 @@
 import re
 import pickle
 from collections import Counter
-from body_tf_idf_inverted_index_gcp_without_stemming import InvertedIndex
+from merged_all_inexes_with_bm_25_score import InvertedIndex
 
 RE_WORD = re.compile(r"""[\#\@\w](['\-]?\w){2,24}""", re.UNICODE)
-MERGED_BM25_INDEX_FOLDER = ""
-INDEX_WEIGHT = 0.78
+MERGED_BM25_INDEX_FOLDER = "merged_corpus_index_two_word"
+INDEX_WEIGHT =
+BUCKET_NAME = "idx316179928316366087idx"
 
 def get_top_100_best_search(query, index, page_views_page_rank_dict, stemmer):
 
@@ -19,7 +20,7 @@ def get_top_100_best_search(query, index, page_views_page_rank_dict, stemmer):
     doc_id_to_score = Counter()
     for word,query_tf in words_in_query_tf.items():
         if word in index.df:
-            for doc_id, score in index.read_posting_list(word, MERGED_BM25_INDEX_FOLDER):
+            for doc_id, score in index.read_posting_list(word, MERGED_BM25_INDEX_FOLDER, BUCKET_NAME):
                 doc_id_to_score[doc_id]+= (query_tf*score)
 
     for doc_id,score in doc_id_to_score.items():

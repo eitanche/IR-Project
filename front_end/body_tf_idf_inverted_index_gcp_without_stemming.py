@@ -11,7 +11,7 @@ from time import time
 from pathlib import Path
 import pickle
 import struct
-#from google.cloud import storage
+from google.cloud import storage
 from collections import defaultdict
 from contextlib import closing
 
@@ -67,14 +67,17 @@ class MultiFileWriter:
 class MultiFileReader:
     """ Sequential binary reader of multiple files of up to BLOCK_SIZE each. """
 
-    def __init__(self):
+    def __init__(self, base_dir, bucket_name):
         self._open_files = {}
+        self.client = storage.Client()
+        self.bucket = self.client.bucket(bucket_name)
+        self.base_dir = base_dir +"/"
 
     def read(self, locs, n_bytes):
         b = []
         for f_name, offset in locs:
             if f_name not in self._open_files:
-                self._open_files[f_name] = open(f_name, 'rb')
+                self._open_files[f_name] = self.bucket.get_blob(self.base_dir + f_name).open('rb')
             f = self._open_files[f_name]
             f.seek(offset)
             n_read = min(n_bytes, BLOCK_SIZE - offset)
@@ -157,8 +160,8 @@ class InvertedIndex:
         del state['_posting_list']
         return state
 
-    def read_posting_list(self, w, base_dir):
-        with closing(MultiFileReader(base_dir)) as reader:
+    def read_posting_list(self, w, base_dir, bucket_name):
+        with closing(MultiFileReader(base_dir, bucket_name)) as reader:
             locs = self.posting_locs[w]
             b = reader.read(locs, self.df[w] * TUPLE_SIZE)
             posting_list = []
@@ -190,9 +193,11 @@ class InvertedIndex:
                 yield w, posting_list
 
     @staticmethod
-    def read_index(base_dir, name):
-            with open(Path(base_dir) / f'{name}.pkl', 'rb') as f:
-                return pickle.load(f)
+    def read_index(bucket_name, base_dir, name):
+        client = storage.Client()
+        bucket = client.get_bucket(bucket_name)
+        with bucket.get_blob(f'{base_dir}/{name}.pkl').open("rb") as f:
+            return pickle.load(f)
 
     @staticmethod
     def delete_index(base_dir, name):

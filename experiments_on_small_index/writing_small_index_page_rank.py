@@ -8,9 +8,9 @@ from inverted_index_gcp import InvertedIndex
 need_words = ['python', 'data', 'science', 'migraine', 'chocolate', 'how', 'to', 'make', 'pasta', 'Does', 'pasta', 'have', 'preserv', 'how', 'google', 'works', 'what', 'is', 'information', 'retrieval', 'NBA', 'yoga', 'how', 'to', 'not', 'kill', 'plants', 'masks', 'black', 'friday', 'why', 'do', 'men', 'have', 'nipples', 'rubber', 'duck', 'michelin', 'what', 'to', 'watch', 'best', 'marvel', 'movie', 'how', 'tall', 'is', 'the', 'eiffel', 'tower', 'where', 'does', 'vanilla', 'flavoring', 'come', 'from', 'best', 'ice', 'cream', 'flavour', 'how', 'to', 'tie', 'a', 'tie', 'how', 'to', 'earn', 'money', 'online', 'what', 'is', 'critical', 'race', 'theory', 'what', 'space', 'movie', 'was', 'made', 'in', '1992', 'how', 'to', 'vote', 'google', 'trends', 'dim', 'sum', 'ted', 'fairy', 'tale']
 all_page_ranks_dict = {}
 
-body_index = InvertedIndex.read_index("postings_small_body_gcp", "index")
-title_index = InvertedIndex.read_index("postings_small_title_gcp", "index")
-anchor_index = InvertedIndex.read_index("postings_small_anchor_text_gcp_2", "index")
+body_index = InvertedIndex.read_index("small_indexes_pickles_and_bins/postings_small_body_gcp", "index")
+title_index = InvertedIndex.read_index("small_indexes_pickles_and_bins/postings_small_title_gcp", "index")
+anchor_index = InvertedIndex.read_index("small_indexes_pickles_and_bins/postings_small_anchor_text_gcp_2", "index")
 
 
 def update_dict_of_needed_page_ranks(index, term ,base_dir, all_page_ranks_dict):
@@ -29,11 +29,13 @@ with open(f'{os.pardir}/Page_rank_big.csv', mode='r') as infile:
     new_dict = defaultdict(list)
     for term in need_words:
         if term in body_index.df:
-            update_dict_of_needed_page_ranks(body_index,term, "postings_small_body_gcp", all_page_ranks_dict)
+            update_dict_of_needed_page_ranks(body_index, term, "small_indexes_pickles_and_bins/postings_small_body_gcp", all_page_ranks_dict)
         if term in title_index.df:
-            update_dict_of_needed_page_ranks(title_index, term, "postings_small_title_gcp", all_page_ranks_dict)
+            update_dict_of_needed_page_ranks(title_index, term,
+                                             "small_indexes_pickles_and_bins/postings_small_title_gcp", all_page_ranks_dict)
         if term in anchor_index.df:
-            update_dict_of_needed_page_ranks(anchor_index, term, "postings_small_anchor_text_gcp_2", all_page_ranks_dict)
+            update_dict_of_needed_page_ranks(anchor_index, term,
+                                             "small_indexes_pickles_and_bins/postings_small_anchor_text_gcp_2", all_page_ranks_dict)
 
 
     print(list(new_dict.items())[:10])
@@ -43,7 +45,7 @@ with open(f'{os.pardir}/Page_rank_big.csv', mode='r') as infile:
 
 
 
-    with open('small_page_rank.json', mode='w') as outfile:
+    with open('jsons/page_rank/small_page_rank.json', mode='w') as outfile:
         json.dump(new_dict,outfile)
 
 

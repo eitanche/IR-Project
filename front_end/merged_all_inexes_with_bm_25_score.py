@@ -11,7 +11,7 @@ from time import time
 from pathlib import Path
 import pickle
 import struct
-#from google.cloud import storage
+from google.cloud import storage
 from collections import defaultdict
 from contextlib import closing
 
@@ -68,10 +68,25 @@ class MultiFileWriter:
 class MultiFileReader:
     """ Sequential binary reader of multiple files of up to BLOCK_SIZE each. """
 
-    def __init__(self):
+    def __init__(self, base_dir, bucket_name):
         self._open_files = {}
+        self.client = storage.Client()
+        self.bucket = self.client.bucket(bucket_name)
+        self.base_dir = base_dir +"/"
 
     def read(self, locs, n_bytes):
+        b = []
+        for f_name, offset in locs:
+            if f_name not in self._open_files:
+                self._open_files[f_name] = self.bucket.get_blob(self.base_dir + f_name).open('rb')
+            f = self._open_files[f_name]
+            f.seek(offset)
+            n_read = min(n_bytes, BLOCK_SIZE - offset)
+            b.append(f.read(n_read))
+            n_bytes -= n_read
+        return b''.join(b)
+
+    def read_from_local_storage(self, locs, n_bytes):
         b = []
         for f_name, offset in locs:
             if f_name not in self._open_files:
@@ -95,7 +110,7 @@ class MultiFileReader:
 from collections import defaultdict
 from contextlib import closing
 
-TUPLE_SIZE = 12  # We're going to pack the doc_id and tf values in this
+TUPLE_SIZE = 16  # We're going to pack the doc_id and tf values in this
 # many bytes.
 TF_MASK = 2 ** 16 - 1  # Masking the 16 low bits of an integer
 
@@ -158,8 +173,8 @@ class InvertedIndex:
         del state['_posting_list']
         return state
 
-    def read_posting_list(self, w, base_dir):
-        with closing(MultiFileReader(base_dir)) as reader:
+    def read_posting_list(self, w, base_dir, bucket_name):
+        with closing(MultiFileReader(base_dir, bucket_name)) as reader:
             locs = self.posting_locs[w]
             b = reader.read(locs, self.df[w] * TUPLE_SIZE)
             posting_list = []
@@ -169,12 +184,25 @@ class InvertedIndex:
                 doc_id,tf_idf_score = struct.unpack("Id", b[i * TUPLE_SIZE:(i + 1) * TUPLE_SIZE])
                 posting_list.append((doc_id, tf_idf_score))
 
-                    # print(self.posting_locs[w])
-                # doc_id = int.from_bytes(b[i*TUPLE_SIZE:i*TUPLE_SIZE+4], 'big')
-                # tf = int.from_bytes(b[i*TUPLE_SIZE+4:(i+1)*TUPLE_SIZE], 'big')
-                # posting_list.append((doc_id, tf))
             return posting_list
 
+    def read_posting_list_from_local_storage(self, w, base_dir):
+        with closing(MultiFileReader(base_dir, "")) as reader:
+            locs = self.posting_locs[w]
+            b = reader.read_from_local_storage(locs, self.df[w] * TUPLE_SIZE)
+            posting_list = []
+            for i in range(self.df[w]):
+                ##################### EDITED TO NEW POSTING LIST#######################
+
+                doc_id,tf_idf_score = struct.unpack("Id", b[i * TUPLE_SIZE:(i + 1) * TUPLE_SIZE])
+                posting_list.append((doc_id, tf_idf_score))
+
+            return posting_list
+
+    @staticmethod
+    def read_index_from_local_storage(base_dir, name):
+        with open(Path(base_dir) / f'{name}.pkl', 'rb') as f:
+            return pickle.load(f)
 
     def posting_lists_iter(self):
         """ A generator that reads one posting list from disk and yields
@@ -191,9 +219,11 @@ class InvertedIndex:
                 yield w, posting_list
 
     @staticmethod
-    def read_index(base_dir, name):
-            with open(Path(base_dir) / f'{name}.pkl', 'rb') as f:
-                return pickle.load(f)
+    def read_index(bucket_name, base_dir, name):
+        client = storage.Client()
+        bucket = client.get_bucket(bucket_name)
+        with bucket.get_blob(f'{base_dir}/{name}.pkl').open("rb") as f:
+            return pickle.load(f)
 
     @staticmethod
     def delete_index(base_dir, name):

@@ -169,10 +169,6 @@ class InvertedIndex:
                 doc_id,tf_idf_score = struct.unpack("Id", b[i * TUPLE_SIZE:(i + 1) * TUPLE_SIZE])
                 posting_list.append((doc_id, tf_idf_score))
 
-                    # print(self.posting_locs[w])
-                # doc_id = int.from_bytes(b[i*TUPLE_SIZE:i*TUPLE_SIZE+4], 'big')
-                # tf = int.from_bytes(b[i*TUPLE_SIZE+4:(i+1)*TUPLE_SIZE], 'big')
-                # posting_list.append((doc_id, tf))
             return posting_list
 
 

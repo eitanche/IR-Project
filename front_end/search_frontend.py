@@ -38,9 +38,9 @@ PAGE_RANK_FILE_NAME = f'{os.pardir}{os.sep}final_indexes_and_files{os.sep}page_r
 DOC_ID_TO_TITLE = f"{os.pardir}{os.sep}final_indexes_and_files{os.sep}dict_of_id_title.pkl"
 DOC_ID_TO_PAGE_VIEWS = f"{os.pardir}{os.sep}final_indexes_and_files{os.sep}page_views_of_each_doc.pkl"
 PAGE_VIEWS_PAGE_RANK_DICT = f"{os.pardir}{os.sep}final_indexes_and_files{os.sep}combined_page_rank_page_view_score_weighted.pkl"
-TITLE_INDEX_FOLDER = f"{os.pardir}{os.sep}final_indexes_and_files{os.sep}title_binary_index"
-ANCHOR_INDEX_FOLDER = f"{os.pardir}{os.sep}final_indexes_and_files{os.sep}anchor_binary_index"
-BEST_FINAL_MERGED_INDEX = None
+TITLE_INDEX_FOLDER = f"simple_indexes_for_frontend/title_binary_index"
+ANCHOR_INDEX_FOLDER = f"simple_indexes_for_frontend/anchor_binary_index"
+BEST_FINAL_MERGED_INDEX = "merged_corpus_index_two_word"
 ####global names####
 @app.route("/search")
 def search():
