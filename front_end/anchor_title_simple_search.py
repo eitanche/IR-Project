@@ -1,17 +1,11 @@
 from title_anchor_binary_inverted_index_gcp_without_stemming import InvertedIndex
-import os
 import re
 from collections import Counter
 
 RE_WORD = re.compile(r"""[\#\@\w](['\-]?\w){2,24}""", re.UNICODE)
 
 
-def count_and_sort_query_terms(query, folder):
-    # folder = ""
-    # if(type_of_index=="title"):
-    #     folder = TITLE_INDEX_FOLDER
-    # else:
-    #     folder = ANCHOR_INDEX_FOLDER
+def get_achor_title_all_docs(query, folder):
     index = InvertedIndex.read_index(folder,"index")
 
     uniques_words_in_query = set([token.group() for token in RE_WORD.finditer(query.lower())])

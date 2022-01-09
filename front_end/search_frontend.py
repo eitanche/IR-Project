@@ -1,52 +1,47 @@
 import json
 import pickle
 from flask import Flask, request, jsonify
-from count_query_appearances_in_docs import count_and_sort_query_terms
-from title_anchor_binary_inverted_index_gcp_without_stemming import InvertedIndex
-from body_tf_idf_search import get_top_100_tf_idf_scores
 import os
+from anchor_title_simple_search import get_achor_title_all_docs
+from body_tf_idf_search import get_top_100_tf_idf_scores
 from best_search_function_for_frontend import get_top_100_best_search
+from nltk.stem.porter import *
 
 class MyFlaskApp(Flask):
     def run(self, host=None, port=None, debug=None, **options):
+        with open(DOC_ID_TO_TITLE, "rb") as f:
+            self.doc_id_to_title = pickle.load(f)
+
+        with open(PAGE_VIEWS_PAGE_RANK_DICT, "rb") as f:
+            self.page_views_page_rank_dict = pickle.load(f)
+
+        # if there is a ram problems, this ones need to sit in their own function
+        with open(DOC_ID_TO_PAGE_VIEWS, "rb") as f:
+            self.doc_id_to_page_views = pickle.load(f)
+
+        with open(PAGE_RANK_FILE_NAME, 'r') as f:
+            self.page_ranks_dict = json.load(f)
+        # if there is a ram problems, this ones need to sit in their own function
+
+        self.best_final_merged_index = None ################# load the final index here
+        self.stemmer = PorterStemmer()
         super(MyFlaskApp, self).run(host=host, port=port, debug=debug, **options)
 
 app = MyFlaskApp(__name__)
 app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
 ####global names####
-PAGE_RANK_FILE_NAME = '../final_indexes_and_files/page_rank.json'
-DOC_ID_TO_TITLE = f"{os.pardir}/final_indexes_and_files/dict_of_id_title.pkl"
-DOC_ID_TO_PAGE_VIEWS = f"{os.pardir}/final_indexes_and_files/page_views_of_each_doc.pkl"
-PAGE_VIEWS_PAGE_RANK_DICT = f"{os.pardir}/final_indexes_and_files/combined_page_rank_page_view_score_weighted_019_003.pkl"
-TITLE_INDEX_FOLDER = f"{os.pardir}/final_indexes_and_files/title_binary_index"
-ANCHOR_INDEX_FOLDER = f"{os.pardir}/final_indexes_and_files/anchor_binary_index"
+
+#update TITLE AND ANCHOR FOLDERS TO BE READ FROM THE BUCKET
+
+PAGE_RANK_FILE_NAME = f'{os.pardir}{os.sep}final_indexes_and_files{os.sep}page_rank.json'
+DOC_ID_TO_TITLE = f"{os.pardir}{os.sep}final_indexes_and_files{os.sep}dict_of_id_title.pkl"
+DOC_ID_TO_PAGE_VIEWS = f"{os.pardir}{os.sep}final_indexes_and_files{os.sep}page_views_of_each_doc.pkl"
+PAGE_VIEWS_PAGE_RANK_DICT = f"{os.pardir}{os.sep}final_indexes_and_files{os.sep}combined_page_rank_page_view_score_weighted.pkl"
+TITLE_INDEX_FOLDER = f"{os.pardir}{os.sep}final_indexes_and_files{os.sep}title_binary_index"
+ANCHOR_INDEX_FOLDER = f"{os.pardir}{os.sep}final_indexes_and_files{os.sep}anchor_binary_index"
 BEST_FINAL_MERGED_INDEX = None
 ####global names####
-
-
-####global dicts####
-doc_id_to_title = None
-doc_id_to_page_views = None
-best_final_merged_index = None
-page_vies_page_rank_dict = None
-
-with open(DOC_ID_TO_TITLE, "rb") as f:
-    doc_id_to_title = pickle.load(f)
-
-with open(PAGE_VIEWS_PAGE_RANK_DICT, "rb") as f:
-    page_vies_page_rank_dict = pickle.load(f)
-
-#if there is a ram problems, this ones need to sit in their own function
-with open(DOC_ID_TO_PAGE_VIEWS, "rb") as f:
-    doc_id_to_page_views = pickle.load(f)
-
-with open(PAGE_RANK_FILE_NAME,'r') as f:
-    page_ranks_dict = json.load(f)
-#if there is a ram problems, this ones need to sit in their own function
-
-####global dicts####
-
 @app.route("/search")
 def search():
     ''' Returns up to a 100 of your best search results for the query. This is 
@@ -73,8 +68,8 @@ def search():
     #word2vec?
     #####
     # BEGIN SOLUTION
-    best_top_doc_ids_and_scores = get_top_100_best_search(query,best_final_merged_index,page_vies_page_rank_dict)
-    res = [[doc_id, doc_id_to_title.get(doc_id,'no_title_relevant_doc')] for doc_id, score in best_top_doc_ids_and_scores]
+    best_top_doc_ids_and_scores = get_top_100_best_search(query,app.best_final_merged_index,app.page_views_page_rank_dict, app.stemmer)
+    res = [[doc_id, app.doc_id_to_title.get(doc_id,'Relevant document without title')] for doc_id, score in best_top_doc_ids_and_scores]
     # END SOLUTION
     return jsonify(res)
 
@@ -100,7 +95,7 @@ def search_body():
       return jsonify(res)
     # BEGIN SOLUTION
     top_doc_ids_and_scores = get_top_100_tf_idf_scores(query)
-    res = [[doc_id, doc_id_to_title.get(doc_id,'no_title_relevant_doc')] for doc_id, score in top_doc_ids_and_scores]
+    res = [[doc_id, app.doc_id_to_title.get(doc_id,'Relevant document without title')] for doc_id, score in top_doc_ids_and_scores]
     # END SOLUTION
     return jsonify(res)
 
@@ -125,11 +120,9 @@ def search_title():
     query = request.args.get('query', '')
     if len(query) == 0:
         return jsonify(res)
-    # print("here")
     # BEGIN SOLUTION
-    doc_ids_and_scores = count_and_sort_query_terms(query, TITLE_INDEX_FOLDER)
-    res = [[doc_id[0],doc_id_to_title.get(doc_id[0],'no_title_relevant_doc')] for doc_id,score in doc_ids_and_scores]
-    # print(res[:10])
+    doc_ids_and_scores = get_achor_title_all_docs(query, TITLE_INDEX_FOLDER)
+    res = [[doc_id[0],app.doc_id_to_title.get(doc_id[0],'Relevant document without title')] for doc_id,score in doc_ids_and_scores]
     # END SOLUTION
     return jsonify(res)
 
@@ -157,9 +150,8 @@ def search_anchor():
     if len(query) == 0:
         return jsonify(res)
     # BEGIN SOLUTION
-    doc_ids_and_scores = count_and_sort_query_terms(query, ANCHOR_INDEX_FOLDER)
-    res = [[doc_id[0],doc_id_to_title.get(doc_id[0],'no_title_relevant_doc')] for doc_id,score in doc_ids_and_scores]
-    # print(res)
+    doc_ids_and_scores = get_achor_title_all_docs(query, ANCHOR_INDEX_FOLDER)
+    res = [[doc_id[0],app.doc_id_to_title.get(doc_id[0],'Relevant document without title')] for doc_id,score in doc_ids_and_scores]
     # END SOLUTION
     return jsonify(res)
 
@@ -183,16 +175,14 @@ def get_pagerank():
           list of PageRank scores that correrspond to the provided article IDs.
     '''
     res = []
-    # print(page_ranks_dict.get()[10])
     wiki_ids = request.get_json()
     if len(wiki_ids) == 0:
       return jsonify(res)
     # BEGIN SOLUTION
     for id in wiki_ids:
-        if str(id) in page_ranks_dict:
-            res.append(page_ranks_dict[str(id)])
+        if str(id) in app.page_ranks_dict:
+            res.append(app.page_ranks_dict[id])
     # END SOLUTION
-    print(res)
     return jsonify(res)
 
 @app.route("/get_pageview", methods=['POST'])
@@ -215,13 +205,12 @@ def get_pageview():
     '''
     res = []
     wiki_ids = request.get_json()
-    print(len(wiki_ids))
     if len(wiki_ids) == 0:
       return jsonify(res)
     # BEGIN SOLUTION
     for id in wiki_ids:
-        if id in doc_id_to_page_views:
-            res.append(doc_id_to_page_views[id])
+        if id in app.doc_id_to_page_views:
+            res.append(app.doc_id_to_page_views[id])
     # END SOLUTION
     return jsonify(res)
 

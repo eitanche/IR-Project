@@ -1,10 +1,10 @@
 import matplotlib.pyplot  as plt
 import random
 import json
-
+import os
 TRAIN_IDS = [1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 29]
 TEST_IDS =[0, 7, 11, 16, 26]
-EXPERIMENTS_FILE= "final_merge_precision_score_two_word.json"
+EXPERIMENTS_FILE= f"two_word{os.sep}final_merge_precision_score_two_word.json"
 
 
 def choose_test_queries():
