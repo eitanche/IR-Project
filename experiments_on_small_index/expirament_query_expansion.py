@@ -168,7 +168,7 @@ def map_at_k(doc_id_oredered_bm_25_scores,k,i):
 
 
 
-main()
+print('how' in english_stopwords)
 
 
 
