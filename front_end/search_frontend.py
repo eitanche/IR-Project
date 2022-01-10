@@ -4,7 +4,7 @@ from flask import Flask, request, jsonify
 import os
 from anchor_title_simple_search import get_achor_title_all_docs
 from body_tf_idf_search import get_top_100_tf_idf_scores
-from best_search_function_for_frontend import get_top_100_best_search
+from best_search_function_for_frontend import *
 from nltk.stem.porter import *
 from merged_all_inexes_with_bm_25_score import InvertedIndex
 import nltk
@@ -76,14 +76,34 @@ def search():
     '''
     res = []
     query = request.args.get('query', '')
+    case = request.args.get('case', '')
     if len(query) == 0:
       return jsonify(res)
     #####
     #word2vec?
     #####
     # BEGIN SOLUTION
-    best_top_doc_ids_and_scores = get_top_100_best_search(query,app.best_final_merged_index,app.page_views_page_rank_dict, app.stemmer,app.all_stopwords)
-    res = [[doc_id, app.doc_id_to_title.get(doc_id,'Relevant document without title')] for doc_id, score in best_top_doc_ids_and_scores]
+    if case == '1':
+        best_top_doc_ids_and_scores = get_top_100_best_search_1(query,app.best_final_merged_index,app.page_views_page_rank_dict, app.stemmer,app.all_stopwords)
+        res = [[doc_id, app.doc_id_to_title.get(doc_id,'Relevant document without title')] for doc_id, score in best_top_doc_ids_and_scores]
+    elif case == '2':
+        best_top_doc_ids_and_scores = get_top_100_best_search_2(query, app.best_final_merged_index,
+                                                              app.page_views_page_rank_dict, app.stemmer,
+                                                              app.all_stopwords)
+        res = [[doc_id, app.doc_id_to_title.get(doc_id, 'Relevant document without title')] for doc_id, score in
+               best_top_doc_ids_and_scores]
+    elif case == '3':
+        best_top_doc_ids_and_scores = get_top_100_best_search_3(query, app.best_final_merged_index,
+                                                              app.page_views_page_rank_dict, app.stemmer,
+                                                              app.all_stopwords)
+        res = [[doc_id, app.doc_id_to_title.get(doc_id, 'Relevant document without title')] for doc_id, score in
+               best_top_doc_ids_and_scores]
+    elif case == '4':
+        best_top_doc_ids_and_scores = get_top_100_best_search_4(query, app.best_final_merged_index,
+                                                              app.page_views_page_rank_dict, app.stemmer,
+                                                              app.all_stopwords)
+        res = [[doc_id, app.doc_id_to_title.get(doc_id, 'Relevant document without title')] for doc_id, score in
+               best_top_doc_ids_and_scores]
     # END SOLUTION
     x = jsonify(res)
     return x
