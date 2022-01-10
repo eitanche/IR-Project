@@ -39,7 +39,7 @@ for term in index.df.keys():
     docs.update([tup[0] for tup in inverted_index_dict[term]])
 
 #print(docs)
-
+#"train": 0.608095937037738, "test": 0.7142173274622993}
 
 
 N = len(docs) # number of all documents in the inverted index
@@ -63,7 +63,7 @@ def main():
     for score in minimum_score_for_expansion:
         dict_of_scores_to_presicions[score] = calculate_presicion(score,list(queries_dict.keys()))
 
-    with open("all_scores_of_query_expansion.json",'w') as f:
+    with open("../charts/charts_jsons/query expanssion/all_scores_of_query_expansion.json", 'w') as f:
         json.dump(dict_of_scores_to_presicions,f)
 
 
@@ -81,7 +81,7 @@ def query_expansion(query,threshhold):
                 if score >= threshhold:
                     counter += 1
                     similarities_dict[stemmer.stem(token)] += [stemmer.stem(word)]
-                    if counter > 1:
+                    if counter > 0:
                         break
                 else:
                     break
