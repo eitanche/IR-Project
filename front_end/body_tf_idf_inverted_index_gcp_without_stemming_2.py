@@ -97,7 +97,7 @@ class MultiFileReader:
 from collections import defaultdict
 from contextlib import closing
 
-TUPLE_SIZE = 12  # We're going to pack the doc_id and tf values in this
+TUPLE_SIZE = 16  # We're going to pack the doc_id and tf values in this
 # many bytes.
 TF_MASK = 2 ** 16 - 1  # Masking the 16 low bits of an integer
 

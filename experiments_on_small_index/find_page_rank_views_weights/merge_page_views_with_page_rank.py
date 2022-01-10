@@ -14,9 +14,9 @@ with open(f"{os.pardir}{os.sep}{os.pardir}{os.sep}final_indexes_and_files{os.sep
 final_pages_score_dict_without_index = dict()
 
 for doc_id in id_2_title_dict.keys():
-    final_pages_score_dict_without_index[doc_id]=normalized_page_views_dict.get(doc_id,0)*0.03 #+ log((float(page_rank_dict.get(str(doc_id), 0))+1),5) * 0.19
+    final_pages_score_dict_without_index[doc_id]=normalized_page_views_dict.get(doc_id,0)*0.02 #+ log((float(page_rank_dict.get(str(doc_id), 0))+1),5) * 0.19
 
-with open(f"{os.pardir}{os.sep}{os.pardir}{os.sep}final_indexes_and_files{os.sep}combined_page_rank_page_view_score","wb") as f:
+with open(f"{os.pardir}{os.sep}{os.pardir}{os.sep}final_indexes_and_files{os.sep}combined_page_rank_page_view_score_weighted","wb") as f:
     pickle.dump(final_pages_score_dict_without_index,f)
 
 # with open("combined_page_rank_page_view_score_weighted_019_003","rb") as f:

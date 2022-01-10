@@ -3,7 +3,7 @@ import os
 import pickle
 import time
 from collections import defaultdict, Counter
-
+from normalize_page_rank_page_views import normalize_page_rank_views
 w_index=[i*0.01 for i in range (101)]
 w_page_rank=[i*0.01 for i in range (101)]
 w_page_views=[i*0.01 for i in range (101)]
@@ -44,16 +44,17 @@ def map_at_k(doc_id_oredered_bm_25_scores,k,i):
         return 0
     return sum/hit
 
+normalize_page_rank_views()
+
 for index_weight in w_index:
     for page_rank_weight in w_page_rank:
         for page_views_weight in w_page_views:
             if 0.99 < index_weight+page_views_weight+page_rank_weight < 1.01:
                 list_of_all_queries_precision = []
-                stopper = time.time()
                 for i in range(30): #for each query
                     sorted_docs_and_scores = get_top_40_docs_for_single_query(i,index_weight, page_rank_weight, page_views_weight) #40 sorted list of (doc_id,score)
                     list_of_all_queries_precision.append(map_at_k(sorted_docs_and_scores,40,i)) #takes all the docs we have and makes list which contains 30 precisions
                 dict_of_precisions_for_all_queries["index_weight:"+str(index_weight)+","+"page_rank_weight:"+str(page_rank_weight)+","+"page_views_weight:"+str(page_views_weight)] = list_of_all_queries_precision
-                print(time.time() - stopper)
 with open(f"two_word{os.sep}final_merge_precision_score_two_word.json",'w') as f:
     json.dump(dict_of_precisions_for_all_queries,f)
+
