@@ -74,6 +74,10 @@ class MultiFileReader:
         self.bucket = self.client.bucket(bucket_name)
         self.base_dir = base_dir +"/"
 
+    def __init__(self, base_dir):
+        self._open_files = {}
+        self.base_dir = base_dir + "/"
+
     def read(self, locs, n_bytes):
         b = []
         for f_name, offset in locs:
@@ -90,7 +94,7 @@ class MultiFileReader:
         b = []
         for f_name, offset in locs:
             if f_name not in self._open_files:
-                self._open_files[f_name] = open(f_name, 'rb')
+                self._open_files[f_name] = open(self.base_dir+f_name, 'rb')
             f = self._open_files[f_name]
             f.seek(offset)
             n_read = min(n_bytes, BLOCK_SIZE - offset)
@@ -187,7 +191,7 @@ class InvertedIndex:
             return posting_list
 
     def read_posting_list_from_local_storage(self, w, base_dir):
-        with closing(MultiFileReader(base_dir, "")) as reader:
+        with closing(MultiFileReader(base_dir)) as reader:
             locs = self.posting_locs[w]
             b = reader.read_from_local_storage(locs, self.df[w] * TUPLE_SIZE)
             posting_list = []

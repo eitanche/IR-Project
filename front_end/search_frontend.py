@@ -32,7 +32,10 @@ class MyFlaskApp(Flask):
                             "many", "however", "would", "became"]
 
         self.all_stopwords = english_stopwords.union(corpus_stopwords)
-        self.best_final_merged_index = InvertedIndex.read_index(BUCKET_NAME, BEST_FINAL_MERGED_INDEX, "index") ################# load the final index here
+        #self.best_final_merged_index = InvertedIndex.read_index(BUCKET_NAME, BEST_FINAL_MERGED_INDEX, "index") ################# load the final index here
+        self.best_final_merged_index = InvertedIndex.read_index_from_local_storage(BEST_FINAL_MERGED_INDEX_LOCAL,
+                                                                "index")  ################# load the final index here
+
         self.stemmer = PorterStemmer()
         super(MyFlaskApp, self).run(host=host, port=port, debug=debug, **options)
 
@@ -51,6 +54,7 @@ PAGE_VIEWS_PAGE_RANK_DICT = f"{os.pardir}{os.sep}final_indexes_and_files{os.sep}
 TITLE_INDEX_FOLDER = f"simple_indexes_for_frontend/title_binary_index"
 ANCHOR_INDEX_FOLDER = f"simple_indexes_for_frontend/anchor_binary_index"
 BEST_FINAL_MERGED_INDEX = "merged_corpus_index"
+BEST_FINAL_MERGED_INDEX_LOCAL = f"{os.pardir}{os.sep}final_indexes_and_files{os.sep}merged_corpus_index_two_words_sorted"
 ####global names####
 @app.route("/search")
 def search():
@@ -79,12 +83,9 @@ def search():
     #####
     # BEGIN SOLUTION
     best_top_doc_ids_and_scores = get_top_100_best_search(query,app.best_final_merged_index,app.page_views_page_rank_dict, app.stemmer,app.all_stopwords)
-    print(f"got answer from other module")
     res = [[doc_id, app.doc_id_to_title.get(doc_id,'Relevant document without title')] for doc_id, score in best_top_doc_ids_and_scores]
-    print(f"finished finding titles")
     # END SOLUTION
     x = jsonify(res)
-    print(f"finished jsonifing")
     return x
 
 @app.route("/search_body")

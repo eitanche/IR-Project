@@ -26,7 +26,7 @@ def print_query_predicted_and_true_top_10(query_index):
         query_results = json.load(f)[str(query_index)]
     with open("/Users/eitan/University/Information Retrieval/IR-Project/final_indexes_and_files/dict_of_id_title.pkl","rb") as f:
         doc_id_to_title = pickle.load(f)
-    query_results = [doc_id_to_title[int(doc_id)] for doc_id in list(query_results.keys())[:100]]
+    query_results = [doc_id_to_title[int(doc_id)] for doc_id in list(query_results.keys())[:40]]
     print(f"Top 10 predicted query results: {query_results}")
     true_results = [doc_id_to_title[doc_id] for doc_id in queries_true[query_index]]
     print(f"Top 10 true query results: {true_results}")
