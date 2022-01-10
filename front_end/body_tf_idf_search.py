@@ -1,7 +1,7 @@
 import re
 import pickle
 from collections import Counter
-from body_tf_idf_inverted_index_gcp_without_stemming import InvertedIndex
+from body_tf_idf_inverted_index_gcp_without_stemming_2 import InvertedIndex
 import os
 
 BODY_TF_IDF_INDEX_FOLDER = f"simple_indexes_for_frontend/body_tf_idf_index" #######CHANGE TO BUCKET FOLDER

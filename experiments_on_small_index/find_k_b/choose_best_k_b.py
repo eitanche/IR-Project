@@ -1,11 +1,10 @@
 import matplotlib.pyplot  as plt
 import random
 import json
-import os
 
 TRAIN_IDS = [1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 13, 14, 15, 17, 18, 19, 20, 21, 22, 23, 24, 25, 27, 28, 29]
 TEST_IDS =[0, 7, 11, 16, 26]
-EXPERIMENTS_FILE= f"C:/Users/Owner/PycharmProjects/IR-Project/experiments_on_small_index/all_scores_of_query_expansion.json"
+EXPERIMENTS_FILE= "all_scores_of_query_expansion.json"
 
 
 def choose_test_queries():
@@ -26,12 +25,6 @@ def organize_test_and_train():
     print(train_query_ids)
     print(test_query_ids)
 
-def calculate_average(precision_list, ids):
-    sum_of_precisions = 0
-    for query_id in ids:
-        sum_of_precisions+=precision_list[query_id]
-    return sum_of_precisions/len(ids)
-
 def find_average_train_test_for_each_option():
     with open(EXPERIMENTS_FILE,"r") as f:
         k_b_to_precision_list = json.load(f)
@@ -40,19 +33,23 @@ def find_average_train_test_for_each_option():
     for k_b, precision_list in k_b_to_precision_list.items():
         train_average = calculate_average(precision_list, TRAIN_IDS)
         test_average = calculate_average(precision_list, TEST_IDS)
-        # k,b = float(k_b.split(",")[0]), float(k_b.split(",")[1])
-        k_b_to_test_train[k_b]={"score":k_b ,"train":train_average, "test":test_average}
+        k_b_to_test_train[k_b]={"score":k_b,"train":train_average, "test":test_average}
     with open(f"{EXPERIMENTS_FILE[:-5]}_averages.json", "w") as f:
         json.dump(k_b_to_test_train, f)
 
-
+def calculate_average(precision_list, ids):
+    sum_of_precisions = 0
+    for query_id in ids:
+        sum_of_precisions+=precision_list[query_id]
+    return sum_of_precisions/len(ids)
 
 #anchor test 0.7405490012345025 0.1,0.2
 #anchor train 0.5456874271635672
 def choose_maximum_by_train():
     with open(f"{EXPERIMENTS_FILE[:-5]}_averages.json", "r") as f:
         k_b_to_dict = json.load(f)
-    best_k_b = sorted([(k_b, {"train":result_dict["train"], "test":result_dict["test"]}) for k_b, result_dict in k_b_to_dict.items() if result_dict["train"]], key=lambda x:x[1]["train"], reverse=True)[:20]
+
+    best_k_b = sorted([(k_b, {"train":result_dict["train"], "test":result_dict["test"]}) for k_b, result_dict in k_b_to_dict.items() if result_dict["test"]>0.52], key=lambda x:x[1]["train"], reverse=True)[:20]
     for item in best_k_b:
         print(item)
 

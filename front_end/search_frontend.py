@@ -6,7 +6,9 @@ from anchor_title_simple_search import get_achor_title_all_docs
 from body_tf_idf_search import get_top_100_tf_idf_scores
 from best_search_function_for_frontend import get_top_100_best_search
 from nltk.stem.porter import *
-
+from merged_all_inexes_with_bm_25_score import InvertedIndex
+import nltk
+from nltk.corpus import stopwords
 class MyFlaskApp(Flask):
     def run(self, host=None, port=None, debug=None, **options):
         with open(DOC_ID_TO_TITLE, "rb") as f:
@@ -22,8 +24,15 @@ class MyFlaskApp(Flask):
         with open(PAGE_RANK_FILE_NAME, 'r') as f:
             self.page_ranks_dict = json.load(f)
         # if there is a ram problems, this ones need to sit in their own function
+        nltk.download('stopwords')
+        english_stopwords = frozenset(stopwords.words('english'))
+        corpus_stopwords = ["category", "references", "also", "external", "links",
+                            "may", "first", "see", "history", "people", "one", "two",
+                            "part", "thumb", "including", "second", "following",
+                            "many", "however", "would", "became"]
 
-        self.best_final_merged_index = None ################# load the final index here
+        self.all_stopwords = english_stopwords.union(corpus_stopwords)
+        self.best_final_merged_index = InvertedIndex.read_index(BUCKET_NAME, BEST_FINAL_MERGED_INDEX, "index") ################# load the final index here
         self.stemmer = PorterStemmer()
         super(MyFlaskApp, self).run(host=host, port=port, debug=debug, **options)
 
@@ -34,10 +43,11 @@ app.config['JSONIFY_PRETTYPRINT_REGULAR'] = False
 
 #update TITLE AND ANCHOR FOLDERS TO BE READ FROM THE BUCKET
 
+BUCKET_NAME = "idx316179928316366087idx"
 PAGE_RANK_FILE_NAME = f'{os.pardir}{os.sep}final_indexes_and_files{os.sep}page_rank.json'
 DOC_ID_TO_TITLE = f"{os.pardir}{os.sep}final_indexes_and_files{os.sep}dict_of_id_title.pkl"
 DOC_ID_TO_PAGE_VIEWS = f"{os.pardir}{os.sep}final_indexes_and_files{os.sep}page_views_of_each_doc.pkl"
-PAGE_VIEWS_PAGE_RANK_DICT = f"{os.pardir}{os.sep}final_indexes_and_files{os.sep}combined_page_rank_page_view_score_weighted.pkl"
+PAGE_VIEWS_PAGE_RANK_DICT = f"{os.pardir}{os.sep}final_indexes_and_files{os.sep}combined_page_rank_page_view_score_weighted"
 TITLE_INDEX_FOLDER = f"simple_indexes_for_frontend/title_binary_index"
 ANCHOR_INDEX_FOLDER = f"simple_indexes_for_frontend/anchor_binary_index"
 BEST_FINAL_MERGED_INDEX = "merged_corpus_index"
@@ -68,10 +78,14 @@ def search():
     #word2vec?
     #####
     # BEGIN SOLUTION
-    best_top_doc_ids_and_scores = get_top_100_best_search(query,app.best_final_merged_index,app.page_views_page_rank_dict, app.stemmer)
+    best_top_doc_ids_and_scores = get_top_100_best_search(query,app.best_final_merged_index,app.page_views_page_rank_dict, app.stemmer,app.all_stopwords)
+    print(f"got answer from other module")
     res = [[doc_id, app.doc_id_to_title.get(doc_id,'Relevant document without title')] for doc_id, score in best_top_doc_ids_and_scores]
+    print(f"finished finding titles")
     # END SOLUTION
-    return jsonify(res)
+    x = jsonify(res)
+    print(f"finished jsonifing")
+    return x
 
 @app.route("/search_body")
 def search_body():
@@ -181,7 +195,7 @@ def get_pagerank():
     # BEGIN SOLUTION
     for id in wiki_ids:
         if str(id) in app.page_ranks_dict:
-            res.append(app.page_ranks_dict[id])
+            res.append(app.page_ranks_dict[str(id)])
     # END SOLUTION
     return jsonify(res)
 
@@ -217,4 +231,4 @@ def get_pageview():
 
 if __name__ == '__main__':
     # run the Flask RESTful API, make the server publicly available (host='0.0.0.0') on port 8080
-    app.run(host='0.0.0.0', port=8080, debug=True)
+    app.run(host='0.0.0.0', port=8080, debug=False)

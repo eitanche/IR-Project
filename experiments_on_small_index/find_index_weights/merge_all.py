@@ -1,7 +1,8 @@
 import json
+import os
 import time
 from collections import Counter,defaultdict
-from inverted_index_gcp import InvertedIndex
+from experiments_on_small_index.inverted_index_gcp import InvertedIndex
 from math import log10
 from nltk.stem.porter import *
 # from calculate_BM_25 import *
@@ -52,16 +53,17 @@ queries_results_dict = defaultdict(list)
 ####
 
 #### load indexes
-title_index = InvertedIndex.read_index("title_two_word_index","index")
-body_index  = InvertedIndex.read_index("body_two_word_index","index")
-anchor_index = InvertedIndex.read_index("anchor_two_word_index","index")
+location_of_index = f"{os.pardir}{os.sep}"
+title_index = InvertedIndex.read_index(location_of_index+"title_two_word_index","index")
+body_index  = InvertedIndex.read_index(location_of_index+"body_two_word_index","index")
+anchor_index = InvertedIndex.read_index(location_of_index+"anchor_two_word_index","index")
 
 
 ### n #####
 def calculate_number_of_unique_docs_in_index(index,folder):
     unique_docs_set = []
     for word in index.df:
-        pls = index.read_posting_list(word,folder)
+        pls = index.read_posting_list(word,location_of_index+folder)
         for doc_id,_,_,_ in pls:
             unique_docs_set.append(doc_id)
     return len(set(unique_docs_set))
@@ -72,17 +74,17 @@ def calculate_number_of_unique_docs_in_index(index,folder):
 title_base_dir = "title_two_word_index"
 N_TITLE = calculate_number_of_unique_docs_in_index(title_index,"title_two_word_index")
 title_index.N = N_TITLE
-title_index.BASE_DIR = title_base_dir
+title_index.BASE_DIR = location_of_index+title_base_dir
 
 N_BODY = calculate_number_of_unique_docs_in_index(body_index, "body_two_word_index")
 body_index.N = N_BODY
 body_base_dir = "body_two_word_index"
-body_index.BASE_DIR = body_base_dir
+body_index.BASE_DIR = location_of_index+body_base_dir
 
 N_ANCHOR = calculate_number_of_unique_docs_in_index(anchor_index, "anchor_two_word_index")
 anchor_index.N = N_ANCHOR
 anchor_base_dir = "anchor_two_word_index"
-anchor_index.BASE_DIR = anchor_base_dir
+anchor_index.BASE_DIR = location_of_index+anchor_base_dir
 
 
 #### weights
@@ -113,7 +115,7 @@ def main():
                         list_of_all_queries_precision.append(map_at_k(sorted_docs_and_scores,40,i)) #takes all the docs we have and makes list which contains 30 precisions
                     dict_of_precisions_for_all_queries["title wight:"+str(w_title)+","+"body wight:"+str(w_body)+","+"anchor wight:"+str(w_anchor)] = list_of_all_queries_precision
                     print(time.time() - stopper)
-    with open("only_indexes_merged_weights_precision_scores_two_word_index.json", 'w') as f:
+    with open("only_indexes_merged_weights_precision_scores_two_word_index_precision_new.json", 'w') as f:
         json.dump(dict_of_precisions_for_all_queries,f)
 
 
@@ -202,17 +204,25 @@ def BM_25_of_a_single_term_in_query(index,k, b, tf, doc_len, query_tf, term):
     return (numerator/denumerator)*log10((index.N+1)/index.df[term])
 
 
-def map_at_k(doc_id_oredered_bm_25_scores,k,i):
-    sum = 0
+def map_at_k(doc_id_ordered,k,i):
     hit = 0
-    relevant_docs = list(queries_dict.values())[i] #the relevant documents from the i_th query list
-    for i in range(len(doc_id_oredered_bm_25_scores)):#we already cuted the list to size 40 in order_scores funciton
-        if doc_id_oredered_bm_25_scores[i][0] in relevant_docs:
+    relevant_docs = list(queries_dict.values())[i]
+    for i in range(len(doc_id_ordered)):  # we already cuted the list to size 40 in order_scores funciton
+        if doc_id_ordered[i][0] in relevant_docs:
             hit += 1
-            sum += hit / (i + 1)
-    if hit == 0:
-        return 0
-    return sum/hit
+    return hit/40
+
+# def map_at_k(doc_id_oredered_bm_25_scores,k,i):
+#     sum = 0
+#     hit = 0
+#     relevant_docs = list(queries_dict.values())[i] #the relevant documents from the i_th query list
+#     for i in range(len(doc_id_oredered_bm_25_scores)):#we already cuted the list to size 40 in order_scores funciton
+#         if doc_id_oredered_bm_25_scores[i][0] in relevant_docs:
+#             hit += 1
+#             sum += hit / (i + 1)
+#     if hit == 0:
+#         return 0
+#     return sum/hit
 
 
 

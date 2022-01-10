@@ -1,4 +1,4 @@
-from body_tf_idf_inverted_index_gcp_without_stemming import InvertedIndex
+from body_tf_idf_inverted_index_gcp_without_stemming_2 import InvertedIndex
 
 
 def run_all_pls_in_index(base_dir, bucket_name):

@@ -94,17 +94,24 @@ def print_normalized_page_rank():
         print(item)
 
 def normalize_page_rank_views(page_views_log_base = 10, page_rank_log_base = 5):
+
     with open(f'{os.pardir}{os.sep}{os.pardir}{os.sep}final_indexes_and_files{os.sep}page_views_of_each_doc.pkl',
               "rb") as f:
         page_views_dict = pickle.load(f)
-    normalized_page_views_dict = {doc_id: log(page_view, page_views_log_base) for doc_id, page_view in page_views_dict.items()}
+    normalized_page_views_dict = {doc_id: normalize_with_log(page_view, page_views_log_base) for doc_id, page_view in page_views_dict.items()}
 
     with open(f"normalized_page_views_of_each_doc.pkl", "wb") as f:
         pickle.dump(normalized_page_views_dict, f)
 
     with open(f'{os.pardir}{os.sep}{os.pardir}{os.sep}final_indexes_and_files{os.sep}page_rank.json', 'r') as f:
         page_rank_doc_id_rank_dict = json.load(f)
-    normalized_page_rank_doc_id_rank_dict = {doc_id: log(float(page_rank) + 1, page_rank_log_base) for doc_id, page_rank in
+    normalized_page_rank_doc_id_rank_dict = {doc_id: normalize_with_log(float(page_rank) + 1, page_rank_log_base) for doc_id, page_rank in
                                              page_rank_doc_id_rank_dict.items()}
     with open("normalized_page_rank.json", 'w') as f:
         json.dump(normalized_page_rank_doc_id_rank_dict, f)
+
+def normalize_with_log(score, log_base):
+    if log_base==0:
+        print("HERE")
+        return score
+    return log(score, log_base)

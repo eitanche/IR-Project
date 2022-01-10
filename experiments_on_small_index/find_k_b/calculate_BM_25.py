@@ -6,8 +6,8 @@ import json
 from math import log10
 import os
 
-FILE_NAME = "all_k_b_1200_sampels_two_word_index_anchor"
-INDEX_FOLDER = "/Users/eitan/University/Information Retrieval/IR-Project/experiments_on_small_index/anchor_two_word_index"
+FILE_NAME = "all_k_b_1200_sampels_two_word_index_body_P@K"
+INDEX_FOLDER = "/Users/eitan/University/Information Retrieval/IR-Project/experiments_on_small_index/body_two_word_index"
 
 stemmer = PorterStemmer()
 
@@ -18,7 +18,7 @@ query_terms = ['python', 'data', 'scienc', 'migrain', 'chocol', 'how', 'to', 'ma
 inverted_index_dict = defaultdict(list)
 k_b_presicion_values = defaultdict(list)
 queries_dict = {}
-with open("queries_train.json") as f:
+with open(f"{os.pardir}{os.sep}queries_train.json") as f:
     queries_dict = json.load(f)
 
 docs = set()
@@ -124,7 +124,6 @@ def calculate_BM_25_of_a_single_query(k, b, query):
     for term, query_tf in counted_query.items():
         if term not in inverted_index_dict:
             continue
-        print("here")
         pls_of_term = inverted_index_dict[term]
         for doc_id, tf, max_tf, doc_len in pls_of_term:
             docs_scores[doc_id] += BM_25_of_a_single_term_in_query(k, b, tf*0.5, doc_len, query_tf, term)
@@ -143,18 +142,24 @@ def BM_25_of_a_single_term_in_query(k, b, tf, doc_len, query_tf, term):
 def order_scores(bm_25_scores):
     return sorted(bm_25_scores,reverse=True,key=lambda x:x[1])[:40]
 
-
-def map_at_k(doc_id_oredered_bm_25_scores,k,i):
-    sum = 0
+def map_at_k(doc_id_ordered,k,i):
     hit = 0
-    relevant_docs = list(queries_dict.values())[i] #the relevant documents from the i_th query list
-    for i in range(len(doc_id_oredered_bm_25_scores)):#we already cuted the list to size 40 in order_scores funciton
-        if doc_id_oredered_bm_25_scores[i][0] in relevant_docs:
+    relevant_docs = list(queries_dict.values())[i]
+    for i in range(len(doc_id_ordered)):  # we already cuted the list to size 40 in order_scores funciton
+        if doc_id_ordered[i][0] in relevant_docs:
             hit += 1
-            sum += hit / (i + 1)
-    if hit == 0:
-        return 0
-    return sum/hit
+    return hit/40
+# def map_at_k(doc_id_oredered_bm_25_scores,k,i):
+#     sum = 0
+#     hit = 0
+#     relevant_docs = list(queries_dict.values())[i] #the relevant documents from the i_th query list
+#     for i in range(len(doc_id_oredered_bm_25_scores)):#we already cuted the list to size 40 in order_scores funciton
+#         if doc_id_oredered_bm_25_scores[i][0] in relevant_docs:
+#             hit += 1
+#             sum += hit / (i + 1)
+#     if hit == 0:
+#         return 0
+#     return sum/hit
 
 
 
