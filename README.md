@@ -71,4 +71,10 @@ This file contains the InvertedIndex classes for the corresponding index - The T
 #### anchor_title_simple_search.py
 This file handles the http request of search_title and search_anchor - it uses a binary retreival model, to find the documents in which the query terms appeared the most and at least once.
 #### best_search_function_for_frontend.py
+This file handles the http request of search - it uses the merged index, which contains a BM25 score for each combination of document id and word in the titles, bodies and anchor texts. It returns the most relevant documents to the query.
+#### body_tf_idf_search.py
+This file handles the http request of search_body - it uses the TF-IDF index, which contains a TF-IDF score for each combination of document id and word in the bodies. It returns the most relevant documents to the query.
 
+---
+### init_front_end
+This folder contains the scripts which are used to initialize the VM.
