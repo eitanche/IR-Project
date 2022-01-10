@@ -27,7 +27,7 @@ def get_top_100_best_search_1(query, index, page_views_page_rank_dict, stemmer, 
 
     for doc_id,score in doc_id_to_score.items():
         doc_id_to_score[doc_id] = score * INDEX_WEIGHT + page_views_page_rank_dict.get(doc_id, 0) #####the score here is already wighted
-    final_list = sorted(doc_id_to_score.items(), key=lambda x:x[1], reverse=True)[:100]
+    final_list = sorted(doc_id_to_score.items(), key=lambda x:x[1], reverse=True)[:20]
     return final_list
 
 
