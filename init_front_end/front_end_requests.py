@@ -1,12 +1,11 @@
 import json
-
 import requests
 from time import time
-
 import os
+
 # url = 'http://35.232.59.3:8080'
 # place the domain you got from ngrok or GCP IP below.
-url = 'http://34.134.225.55:8080'
+url = 'http://35.222.182.191:8080'
 with open(f'{os.pardir}{os.sep}experiments_on_small_index{os.sep}queries_train.json',"r") as f:
     queries = json.load(f)
 
@@ -46,7 +45,7 @@ for q, true_wids in queries.items():
         duration = time() - t_start
         if res.status_code == 200:
             pred_wids, _ = zip(*res.json())
-            ap = average_precision(true_wids, pred_wids)
+            ap = map_at_k(true_wids, pred_wids)
     except Exception as e:
         print(e)
         print(q)
@@ -63,20 +62,6 @@ for query, duration, map in qs_res:
 if count!=0:
     print(f"average time is: {total_time/count}")
     print(f"average precision is: {total_prec/count}")
-print(qs_res)
-# stopper = time.time()
-# response = requests.get("http://34.134.225.55:8080/search",params={'query':'daniel trachtenberg'})
-# #response = requests.post("http://34.134.225.55:8080/get_pageview",json=[128397, 1283791, 45908, 239048, 129367, 32478928])
-#
-# stopper = time.time() - stopper
-# print(len(response.json()))
-# print(response.json())
-# print(stopper)
-# #
-# response = requests.post("http://127.0.0.1:8080/search_anchor",params={'query':'how to make pasta'})
-# print(len(response.json()))
-# print(response.json())
 
-#black friday
-#best ice cream flavour
-#what is critical race theory
+
+print(qs_res)
